@@ -1,9 +1,9 @@
-from model.old_conv import *
-from model.simple_conv import *
-from model.gconv import *
-from model.stn import *
-from model.all_conv import *
-from model.vgg_like import *
+from pytorch.model.old_conv import *
+from pytorch.model.simple_conv import *
+from pytorch.model.gconv import *
+from pytorch.model.stn import *
+from pytorch.model.all_conv import *
+from pytorch.model.vgg_like import *
 
 
 class FFNet(nn.Module):
