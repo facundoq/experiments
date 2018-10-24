@@ -1,0 +1,200 @@
+2018-09-07 01:45:47.094949
+Results on dataset mnist with model SimpleConv and rotated model SimpleConv
+model_rotated_test_dataset score: loss=4.618247, accuracy=0.435100
+model_rotated_train_dataset score: loss=4.566565, accuracy=0.442250
+model_test_dataset score: loss=0.035609, accuracy=0.990800
+model_train_dataset score: loss=0.017154, accuracy=0.994717
+rotated_model_rotated_test_dataset score: loss=0.088615, accuracy=0.972900
+rotated_model_rotated_train_dataset score: loss=0.087717, accuracy=0.971817
+rotated_model_test_dataset score: loss=0.085621, accuracy=0.973200
+rotated_model_train_dataset score: loss=0.075267, accuracy=0.975617
+Config: TrainRotatedConfig(dataset_name='mnist', batch_size=64, epochs=5, pre_rotated_epochs=0, rotated_epochs=5, optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), rotated_optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), use_cuda=True)
+
+2018-09-09 17:09:22.485929
+Results on dataset mnist with model SimpleConv and rotated model SimpleConv
+model_rotated_test_dataset score: loss=4.840341, accuracy=0.408000
+model_rotated_train_dataset score: loss=4.842634, accuracy=0.410300
+model_test_dataset score: loss=0.032970, accuracy=0.990100
+model_train_dataset score: loss=0.017188, accuracy=0.994400
+rotated_model_rotated_test_dataset score: loss=0.084863, accuracy=0.973500
+rotated_model_rotated_train_dataset score: loss=0.083312, accuracy=0.973500
+rotated_model_test_dataset score: loss=0.064304, accuracy=0.980400
+rotated_model_train_dataset score: loss=0.051125, accuracy=0.984133
+Config: TrainRotatedConfig(dataset_name='mnist', batch_size=64, epochs=5, pre_rotated_epochs=0, rotated_epochs=5, optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), rotated_optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), use_cuda=True)
+
+2018-09-09 22:22:24.031191
+Results on dataset mnist with model SimpleConv and rotated model SimpleConv
+model_rotated_test_dataset score: loss=4.422307, accuracy=0.447400
+model_rotated_train_dataset score: loss=4.455732, accuracy=0.449033
+model_test_dataset score: loss=0.023959, accuracy=0.992900
+model_train_dataset score: loss=0.008081, accuracy=0.997350
+rotated_model_rotated_test_dataset score: loss=0.059299, accuracy=0.980800
+rotated_model_rotated_train_dataset score: loss=0.050811, accuracy=0.984083
+rotated_model_test_dataset score: loss=0.049233, accuracy=0.982900
+rotated_model_train_dataset score: loss=0.038611, accuracy=0.987717
+Config: TrainRotatedConfig(dataset_name='mnist', batch_size=64, epochs=5, pre_rotated_epochs=0, rotated_epochs=15, optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), rotated_optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), use_cuda=True)
+
+2018-09-10 03:03:58.187281
+Results on dataset mnist with model SimpleConv and rotated model SimpleConv
+model_rotated_test_dataset score: loss=4.144290, accuracy=0.454500
+model_rotated_train_dataset score: loss=4.214368, accuracy=0.449600
+model_test_dataset score: loss=0.020178, accuracy=0.993600
+model_train_dataset score: loss=0.007955, accuracy=0.997367
+rotated_model_rotated_test_dataset score: loss=0.066203, accuracy=0.979300
+rotated_model_rotated_train_dataset score: loss=0.056988, accuracy=0.982083
+rotated_model_test_dataset score: loss=0.048222, accuracy=0.984800
+rotated_model_train_dataset score: loss=0.036875, accuracy=0.988617
+Config: TrainRotatedConfig(dataset_name='mnist', batch_size=64, epochs=5, pre_rotated_epochs=0, rotated_epochs=15, optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), rotated_optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), use_cuda=True)
+
+2018-09-10 04:06:02.619036
+Results on dataset mnist with model SimpleConv and rotated model SimpleConv
+model_rotated_test_dataset score: loss=4.401523, accuracy=0.435500
+model_rotated_train_dataset score: loss=4.362092, accuracy=0.439900
+model_test_dataset score: loss=0.024421, accuracy=0.992300
+model_train_dataset score: loss=0.009378, accuracy=0.996917
+rotated_model_rotated_test_dataset score: loss=0.062537, accuracy=0.979300
+rotated_model_rotated_train_dataset score: loss=0.057263, accuracy=0.982333
+rotated_model_test_dataset score: loss=0.059741, accuracy=0.981100
+rotated_model_train_dataset score: loss=0.053442, accuracy=0.983417
+Config: TrainRotatedConfig(dataset_name='mnist', batch_size=64, epochs=5, pre_rotated_epochs=0, rotated_epochs=15, optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), rotated_optimizer=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 0.0
+
+Parameter Group 1
+    amsgrad: False
+    betas: (0.9, 0.999)
+    eps: 1e-08
+    lr: 0.001
+    weight_decay: 1e-09
+), use_cuda=True)
+

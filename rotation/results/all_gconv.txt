@@ -1,0 +1,10 @@
+2018-09-10 23:29:16.717815
+Results on dataset cifar10 with model AllGConvolutional and rotated model AllGConvolutional
+model_rotated_test_dataset score: loss=3.967744, accuracy=0.330300
+model_rotated_train_dataset score: loss=3.881396, accuracy=0.343940
+model_test_dataset score: loss=0.896619, accuracy=0.759600
+model_train_dataset score: loss=0.206761, accuracy=0.927940
+rotated_model_rotated_test_dataset score: loss=1.029042, accuracy=0.674000
+rotated_model_rotated_train_dataset score: loss=0.801106, accuracy=0.742980
+rotated_model_test_dataset score: loss=0.993148, accuracy=0.691000
+rotated_model_train_dataset score: loss=0.758852, accuracy=0.756080

@@ -1,0 +1,9 @@
+
+torch
+torchvision
+progressbar2
+torchsummary
+
+# install groupy with pytorch support
+# 1) clone https://github.com/adambielski/GrouPy
+# 2) In the same venv as you are using, run "python setup.py install" in the Groupy folder
