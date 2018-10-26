@@ -16,7 +16,19 @@ def analyze_outputs(model,dataset,config):
     image_dataset = ImageDataset(dataset.x_test, dataset.y_test)
     a=[1,2,3]
     x,y=image_dataset.get_batch(a)
-    print(x.shape,y)
+    print("batch",  x.shape,y)
+
+    def hook(module,input,output):
+
+        print(f"hook for {module}, output: ",output.shape)
+
+    if config.use_cuda:
+        x=x.cuda()
+
+    model.conv.register_forward_hook(hook)
+    model.fc.register_forward_hook(hook)
+    y2,intermediates=model.forward_intermediates(x)
+    print(y2.shape,len(intermediates))
 
     # train_dataset, rotated_train_dataset = get_data_generator(dataset.x_train, dataset.y_train, config.batch_size)
     # test_dataset, rotated_test_dataset = get_data_generator(dataset.x_test, dataset.y_test, config.batch_size)

@@ -1,6 +1,18 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
+class SequentialWithIntermediates(nn.Sequential):
+    def __init__(self,*args):
+        super(SequentialWithIntermediates, self).__init__(*args)
+
+    def forward_intermediates(self,input):
+        outputs=[]
+        for module in self._modules.values():
+            input = module(input)
+            outputs.append(outputs)
+        return input,outputs
+
 class SimpleConv(nn.Module):
     def __init__(self,input_shape,num_classes,conv_filters=32,fc_filters=128):
         super(SimpleConv, self).__init__()
@@ -20,7 +32,7 @@ class SimpleConv(nn.Module):
         #     nn.ReLU(),
         #     )
 
-        self.conv = nn.Sequential(
+        self.conv = SequentialWithIntermediates(
             nn.Conv2d(channels, conv_filters, 3, padding=1),
             nn.ReLU(),
             nn.Conv2d(conv_filters, conv_filters, 3, padding=1),
@@ -37,7 +49,7 @@ class SimpleConv(nn.Module):
 
         self.linear_size = h * w * (conv_filters*4) // 4 // 4
 
-        self.fc= nn.Sequential(
+        self.fc= SequentialWithIntermediates(
                 nn.Linear(self.linear_size, fc_filters),
                 # nn.BatchNorm1d(fc_filters),
                 nn.ReLU(),
@@ -53,6 +65,15 @@ class SimpleConv(nn.Module):
         x = self.fc(x)
         x = F.log_softmax(x, dim=-1)
         return x
+
+    def forward_intermediates(self,x):
+        x1, convs = self.conv.forward_intermediates(x)
+
+        x2 = x1.view(-1, self.linear_size)
+        x3,fcs = self.fc.forward_intermediates(x2)
+        x4 = F.log_softmax(x3, dim=-1)
+
+        return x4,convs+fcs
 
 
     def layer_names(self):

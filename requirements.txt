@@ -12,3 +12,4 @@ https://pypi.python.org/packages/b5/3f/940329280d058ce0907c3d811341a4ff98bb1b1be
 https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.4.0-cp36-cp36m-linux_x86_64.whl
 https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.4.0-cp36-cp36m-linux_x86_64.whl
 keras
+torchvision
