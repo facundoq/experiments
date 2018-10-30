@@ -74,7 +74,8 @@ class SimpleConv(nn.Module):
         x4 = F.log_softmax(x3, dim=-1)
 
         return x4,convs+fcs
-
+    def n_intermediates(self):
+        return 14
 
     def layer_names(self):
         conv_layer_names = ["c1", "c2", "c3", "c4", "c5"]

@@ -15,7 +15,6 @@ class ClassificationDataset:
 
 class ImageDataset(Dataset):
 
-
     def __init__(self, x,y,rotation=None):
 
         self.x=x
@@ -29,11 +28,15 @@ class ImageDataset(Dataset):
                          ]
 
         if rotation:
-            transformations.insert(1,transforms.RandomRotation(180,resample=Image.BILINEAR))
+            self.rotation_transformation=transforms.RandomRotation(180, resample=Image.BILINEAR)
+            transformations.insert(1,self.rotation_transformation)
         else:
             pass
 
         self.transform=transforms.Compose(transformations)
+
+    def update_rotation_angle(self,degrees):
+        self.rotation_transformation.degrees=degrees
 
     def __len__(self):
         return self.x.shape[0]
@@ -54,6 +57,10 @@ class ImageDataset(Dataset):
         y = self.y[idx, :].argmax(axis=1)
         x= torch.stack(images,0)
         return x,y
+    def get_all(self):
+        ids=list(range(len(self)))
+        return self.get_batch(ids)
+
 
 def get_data_generator(x,y,batch_size):
     image_dataset=ImageDataset(x,y)
