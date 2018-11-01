@@ -33,10 +33,13 @@ def run(model,dataset,config,n_rotations):
         class_stats= eval_invariance_batch(class_dataset,model,config,rotations)
         cvs = calculate_coefficient_of_variation(class_stats)
         all_cvs.append(cvs)
-        plot_class_outputs(c,cvs,model.intermediates_names())
     return all_cvs
 
+def plot(all_cvs,model,num_classes):
 
+    for i,c in enumerate(range(num_classes)):
+        cvs=all_cvs[i]
+        plot_class_outputs(c, cvs, model.intermediates_names())
 
 def calculate_coefficient_of_variation(class_stats):
     cvs = []  # coefficient of variations
@@ -48,10 +51,8 @@ def calculate_coefficient_of_variation(class_stats):
     return cvs
 
 def plot_class_outputs(class_id,cvs,names):
-
-
     n=len(names)
-    f,axes=plt.subplots(1,n,dpi=100)
+    f,axes=plt.subplots(1,n,dpi=150)
     max_cv=max([cv.max() for cv in cvs])
 
     for i,(cv,name) in enumerate(zip(cvs,names)):
@@ -60,7 +61,7 @@ def plot_class_outputs(class_id,cvs,names):
 
         cv=cv[:,np.newaxis]
         #mappable=ax.imshow(cv,vmin=0,vmax=max_cv,cmap='jet')
-        mappable = ax.imshow(cv, cmap='jet')
+        mappable = ax.imshow(cv, cmap='inferno')
         ax.set_title(name,fontsize=7)
 
          #logging.debug(f"plotting stats of layer {name} of class {class_id}, shape {stat.mean().shape}")
