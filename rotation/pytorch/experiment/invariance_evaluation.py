@@ -20,7 +20,7 @@ def run(model,dataset,config,n_rotations,batch_size=256):
     y_ids=y.argmax(axis=1)
     classes=np.unique(y_ids)
     classes.sort()
-    rotations=np.linspace(-179,180,n_rotations,endpoint=False)
+    rotations=np.linspace(-180,180,n_rotations,endpoint=False)
     mean_accuracies=np.zeros((dataset.num_classes,len(rotations)))
     for i, c in enumerate(classes):
         # logging.debug(f"Evaluating invariances for class {c}...")
@@ -33,15 +33,18 @@ def run(model,dataset,config,n_rotations,batch_size=256):
     return mean_accuracies,classes,rotations
 
 def plot_results(mean_accuracies,classes,rotations):
-    f,ax=plt.subplots(1,1)
-    im=ax.matshow(mean_accuracies)
+    f,ax=plt.subplots(1,1,dpi=200)
+    im=ax.imshow(mean_accuracies,vmin=0,vmax=1,cmap="inferno")
     #ax.axis("off")
     ax.set_ylabel("class")
-    ax.set_yticklabels(classes)
-    ax.set_xlabel("rotation")
-    ax.set_xticklabels(np.round(rotations))
+    ax.set_yticks(classes)
+    ax.set_xlabel("rotation angle (º)")
+    ax.set_xticks(np.arange(len(rotations)))
+    ax.set_xticklabels(np.round(rotations),fontsize=6)
+
     f.colorbar(im)
     plt.show()
+    return f
 
 
 

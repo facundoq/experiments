@@ -92,7 +92,7 @@ def train_test_accuracy_barchart2(scores,model,rotated_model,config,savefig):
     return train_test_accuracy_barchart(model.name, config.dataset_name, accuracies,savefig)
 
 def experiment_plot_path(model,dataset):
-    return f"plots/{model}/{dataset.name}"
+    return f"plots/rotated_model/{model}/{dataset.name}"
 
 def train_test_accuracy_barchart(model, dataset, accuracies,savefig):
     import os
