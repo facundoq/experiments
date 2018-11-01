@@ -6,12 +6,12 @@ class SequentialWithIntermediates(nn.Sequential):
     def __init__(self,*args):
         super(SequentialWithIntermediates, self).__init__(*args)
 
-    def forward_intermediates(self,input):
+    def forward_intermediates(self,input_tensor):
         outputs=[]
         for module in self._modules.values():
-            input = module(input)
-            outputs.append(outputs)
-        return input,outputs
+            input_tensor= module(input_tensor)
+            outputs.append(input_tensor)
+        return input_tensor,outputs
 
 class SimpleConv(nn.Module):
     def __init__(self,input_shape,num_classes,conv_filters=32,fc_filters=128):
@@ -72,10 +72,18 @@ class SimpleConv(nn.Module):
         x2 = x1.view(-1, self.linear_size)
         x3,fcs = self.fc.forward_intermediates(x2)
         x4 = F.log_softmax(x3, dim=-1)
+        return x4,convs+fcs+[x4]
 
-        return x4,convs+fcs
     def n_intermediates(self):
-        return 14
+        return len(self.intermediates_names())
+
+    def intermediates_names(self):
+        conv_layer_names = ["c1","c1act","c2", "c2act", "mp1",
+                            "c3", "c3act", "c4", "c4act","mp2",
+                            "c5", "c5act"]
+        fc_layer_names = ["fc1", "fc1act", "fc2", "fc2act"]
+
+        return conv_layer_names+fc_layer_names
 
     def layer_names(self):
         conv_layer_names = ["c1", "c2", "c3", "c4", "c5"]

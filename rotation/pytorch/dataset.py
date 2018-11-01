@@ -13,6 +13,7 @@ class ClassificationDataset:
         self.num_classes=num_classes
         self.input_shape=input_shape
 
+
 class ImageDataset(Dataset):
 
     def __init__(self, x,y,rotation=None):
