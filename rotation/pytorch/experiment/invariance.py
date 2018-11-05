@@ -35,7 +35,7 @@ def run(model,dataset,config,n_rotations):
         cvs = calculate_coefficient_of_variation(class_baselines,class_stats)
         all_cvs.append(cvs)
 
-    return all_cvs
+    return all_cvs,classes
 
 def transform_activations(activations):
     intermediate = activations.detach().cpu().numpy()
@@ -49,15 +49,13 @@ def transform_activations(activations):
 
 def get_baseline_variance_class(model,dataset,config,rotations):
     n_intermediates = model.n_intermediates()
-    running_means = [RunningMeanAndVariance() for i in range(n_intermediates)]
-
+    std_mean = [RunningMeanAndVariance() for i in range(n_intermediates)]
 
     for i, r in enumerate(rotations):
         degrees = (r - 1, r + 1)
         # logging.debug(f"    Rotation {degrees}...")
         dataset.update_rotation_angle(degrees)
         dataloader=DataLoader(dataset,batch_size=128,shuffle=False, num_workers=1)
-
         means_rotation = [RunningMeanAndVariance() for i in range(n_intermediates)]
         # calculate std for all examples and this rotation
         for x,y_true in dataloader:
@@ -74,12 +72,29 @@ def get_baseline_variance_class(model,dataset,config,rotations):
         # each std is intra rotation/class, so it measures the baseline
         # std for that activation
         for i,m in enumerate(means_rotation):
-            running_means[i].update(m.std())
+            std_mean[i].update(m.std())
+    return std_mean
 
+def plot_class_outputs(class_id,cvs,names):
+    n=len(names)
+    f,axes=plt.subplots(1,n,dpi=150)
+    max_cv=max([cv.max() for cv in cvs])
 
+    for i,(cv,name) in enumerate(zip(cvs,names)):
+        ax=axes[i]
+        ax.axis("off")
 
+        cv=cv[:,np.newaxis]
+        #mappable=ax.imshow(cv,vmin=0,vmax=max_cv,cmap='jet')
+        mappable = ax.imshow(cv, cmap='inferno')
+        ax.set_title(name,fontsize=7)
 
-    return running_means
+         #logging.debug(f"plotting stats of layer {name} of class {class_id}, shape {stat.mean().shape}")
+    f.suptitle(f"sigma for class {class_id}")
+    f.subplots_adjust(right=0.8)
+    cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
+    f.colorbar(mappable, cax=cbar_ax)
+    plt.show()
 
 
 def calculate_coefficient_of_variation(class_baselines,class_stats):
@@ -141,7 +156,8 @@ def plot_class_outputs(class_id, cvs, names):
     f.colorbar(mappable, cax=cbar_ax)
     plt.show()
 
+def plot(all_stds,model,classes):
 
-def plot(model,classes,cvs):
-    for c in classes:
-        plot_class_outputs(c, cvs, model.intermediates_names())
+    for i,c in enumerate(classes):
+        stds=all_stds[i]
+        plot_class_outputs(c, stds, model.intermediates_names())

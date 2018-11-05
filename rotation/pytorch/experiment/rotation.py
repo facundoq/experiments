@@ -134,12 +134,12 @@ def train_test_accuracy_barchart(model, dataset, accuracies,savefig):
     return path
 
 
-def plot_history(history,name,model_name,dataset_name,savefig):
+def plot_history(history,name,model_name,dataset,savefig):
     from time import gmtime, strftime
     t=strftime("%Y_%m_%d_%H_%M_%S", gmtime())
     import os
     f, (a1,a2) = plt.subplots(1,2)
-    path= experiment_plot_path(model_name, dataset_name)
+    path= experiment_plot_path(model_name, dataset.name)
     path=os.path.join(path,f"{name}.png")
     # accuracy
     a1.plot(history['acc'])
@@ -156,7 +156,7 @@ def plot_history(history,name,model_name,dataset_name,savefig):
     a2.set_ylabel('loss')
     a2.set_xlabel('epoch')
     a2.legend(['train', 'test'], loc='upper right')
-    f.suptitle(f"{model_name} trained with {name} {dataset_name}")
+    f.suptitle(f"{model_name} trained with {name} {dataset.name}")
     plt.subplots_adjust(wspace=0.3)
     if savefig:
         plt.savefig(path)
