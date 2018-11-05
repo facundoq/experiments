@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+from pytorch.experiment.utils import RunningMeanAndVariance
 from collections import namedtuple
 import numpy as np
 from torch.utils.data import Dataset,DataLoader
@@ -26,54 +26,70 @@ def run(model,dataset,config,n_rotations):
     for i, c in enumerate(classes):
         # logging.debug(f"Evaluating invariances for class {c}...")
         ids=np.where(y_ids==c)
-        ids=ids[0]
-        ids=np.array(ids[:batch_size])
+        # ids=ids[0]
+        # ids=np.array(ids[:batch_size])
         x_class,y_class=x[ids,:],y[ids]
         class_dataset=ImageDataset(x_class,y_class,rotation=True)
-        class_stats= eval_invariance_batch(class_dataset,model,config,rotations)
-        cvs = calculate_coefficient_of_variation(class_stats)
+        class_baselines=get_baseline_variance_class(model,class_dataset,config,rotations)
+        class_stats= eval_invariance_class(class_dataset,model,config,rotations)
+        cvs = calculate_coefficient_of_variation(class_baselines,class_stats)
         all_cvs.append(cvs)
-        plot_class_outputs(c,cvs,model.intermediates_names())
+
     return all_cvs
 
+def transform_activations(activations):
+    intermediate = activations.detach().cpu().numpy()
+    # average out batch dim
+    intermediate = intermediate.mean(axis=0)
+    # if conv average out spatial dims
+    if len(intermediate.shape) == 3:
+        intermediate = intermediate.mean(axis=(1, 2))
+        assert (len(intermediate.shape) == 1)
+    return intermediate
+
+def get_baseline_variance_class(model,dataset,config,rotations):
+    n_intermediates = model.n_intermediates()
+    running_means = [RunningMeanAndVariance() for i in range(n_intermediates)]
 
 
-def calculate_coefficient_of_variation(class_stats):
+    for i, r in enumerate(rotations):
+        degrees = (r - 1, r + 1)
+        # logging.debug(f"    Rotation {degrees}...")
+        dataset.update_rotation_angle(degrees)
+        dataloader=DataLoader(dataset,batch_size=128,shuffle=False, num_workers=1)
+
+        means_rotation = [RunningMeanAndVariance() for i in range(n_intermediates)]
+        # calculate std for all examples and this rotation
+        for x,y_true in dataloader:
+            if config.use_cuda:
+                x = x.cuda()
+            with torch.no_grad():
+                y, intermediates = model.forward_intermediates(x)
+                for i, intermediate in enumerate(intermediates):
+                    flat_activations=transform_activations(intermediate)
+                    # update running mean for this layer
+                    means_rotation[i].update(flat_activations)
+
+        #update the mean of the stds for every rotation
+        # each std is intra rotation/class, so it measures the baseline
+        # std for that activation
+        for i,m in enumerate(means_rotation):
+            running_means[i].update(m.std())
+
+
+
+
+    return running_means
+
+
+def calculate_coefficient_of_variation(class_baselines,class_stats):
     cvs = []  # coefficient of variations
-    for stat in class_stats:
+    for baseline,stat in zip(class_baselines,class_stats):
         std = stat.std()
-        mean = stat.mean()
-        std[mean > 0] /= mean[mean > 0]
+        baseline_std = baseline.mean()
+        std[baseline_std > 0] /= baseline_std[baseline_std > 0]
         cvs.append(std)
     return cvs
-
-def plot_class_outputs(class_id,cvs,names):
-
-
-    n=len(names)
-    f,axes=plt.subplots(1,n,dpi=100)
-    max_cv=max([cv.max() for cv in cvs])
-
-    for i,(cv,name) in enumerate(zip(cvs,names)):
-        ax=axes[i]
-        ax.axis("off")
-
-        cv=cv[:,np.newaxis]
-        #mappable=ax.imshow(cv,vmin=0,vmax=max_cv,cmap='jet')
-        mappable = ax.imshow(cv, cmap='jet')
-        ax.set_title(name,fontsize=7)
-
-         #logging.debug(f"plotting stats of layer {name} of class {class_id}, shape {stat.mean().shape}")
-    f.suptitle(f"sigma for class {class_id}")
-    f.subplots_adjust(right=0.8)
-    cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
-    f.colorbar(mappable, cax=cbar_ax)
-    plt.show()
-
-
-
-
-
 
 # train_dataset, rotated_train_dataset = get_data_generator(dataset.x_train, dataset.y_train, config.batch_size)
 # test_dataset, rotated_test_dataset = get_data_generator(dataset.x_test, dataset.y_test, config.batch_size)
@@ -82,64 +98,50 @@ def plot_class_outputs(class_id,cvs,names):
 # one for each intermediate output of the model.
 #Each RunningMeanAndVariance contains the mean and std of each intermediate
 # output over the set of rotations
-def eval_invariance_batch(dataset,model,config,rotations):
+def eval_invariance_class(dataset,model,config,rotations):
     n_intermediates = model.n_intermediates()
     running_means = [RunningMeanAndVariance() for i in range(n_intermediates)]
-
 
     for i,r in enumerate(rotations):
         degrees = (r - 1, r + 1)
         # logging.debug(f"    Rotation {degrees}...")
         dataset.update_rotation_angle(degrees)
-        x,y_true=dataset.get_all()
-
-        if config.use_cuda:
-            x = x.cuda()
-        with torch.no_grad():
-            y, intermediates = model.forward_intermediates(x)
-            for i, intermediate in enumerate(intermediates):
-                intermediate=intermediate.detach().cpu().numpy()
-                #average out batch dim
-                intermediate=intermediate.mean(axis=0)
-                # if conv average out spatial dims
-                if len(intermediate.shape)==3:
-                    intermediate=intermediate.mean(axis=(1,2))
-                    assert(len(intermediate.shape)==1)
-                #update running mean for this layer
-                running_means[i].update(intermediate)
+        dataloader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=1)
+        for x, y_true in dataloader:
+            if config.use_cuda:
+                x = x.cuda()
+            with torch.no_grad():
+                y, intermediates = model.forward_intermediates(x)
+                for i, intermediate in enumerate(intermediates):
+                    flat_activations = transform_activations(intermediate)
+                    running_means[i].update(flat_activations)
 
     return running_means
 
-class RunningMeanAndVariance:
 
-    def __init__(self):
-        self.n = 0
-        self.old_m = 0
-        self.new_m = 0
-        self.old_s = 0
-        self.new_s = 0
+def plot_class_outputs(class_id, cvs, names):
 
-    def clear(self):
-        self.n = 0
+    n = len(names)
+    f, axes = plt.subplots(1, n, dpi=100)
+    max_cv = max([cv.max() for cv in cvs])
 
-    def update(self, x):
-        self.n += 1
+    for i, (cv, name) in enumerate(zip(cvs, names)):
+        ax = axes[i]
+        ax.axis("off")
 
-        if self.n == 1:
-            self.old_m = self.new_m = x
-            self.old_s = 0
-        else:
-            self.new_m = self.old_m + (x - self.old_m) / self.n
-            self.new_s = self.old_s + (x - self.old_m) * (x - self.new_m)
+        cv = cv[:, np.newaxis]
+        # mappable=ax.imshow(cv,vmin=0,vmax=max_cv,cmap='jet')
+        mappable = ax.imshow(cv, cmap='jet')
+        ax.set_title(name, fontsize=7)
 
-            self.old_m = self.new_m
-            self.old_s = self.new_s
+        # logging.debug(f"plotting stats of layer {name} of class {class_id}, shape {stat.mean().shape}")
+    f.suptitle(f"sigma for class {class_id}")
+    f.subplots_adjust(right=0.8)
+    cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
+    f.colorbar(mappable, cax=cbar_ax)
+    plt.show()
 
-    def mean(self):
-        return self.new_m if self.n else 0.0
 
-    def var(self):
-        return self.new_s / (self.n - 1) if self.n > 1 else 0.0
-
-    def std(self):
-        return np.sqrt(self.var())
+def plot(model,classes,cvs):
+    for c in classes:
+        plot_class_outputs(c, cvs, model.intermediates_names())

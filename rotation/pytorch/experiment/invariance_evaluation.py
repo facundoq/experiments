@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from pytorch.experiment.utils import RunningMeanAndVariance
 
 from collections import namedtuple
 import numpy as np
@@ -32,25 +33,6 @@ def run(model,dataset,config,n_rotations,batch_size=256):
         mean_accuracies[i,:]=class_mean_accuracies
     return mean_accuracies,classes,rotations
 
-def plot_results(mean_accuracies,classes,rotations):
-    f,ax=plt.subplots(1,1,dpi=200)
-    im=ax.imshow(mean_accuracies,vmin=0,vmax=1,cmap="inferno")
-    #ax.axis("off")
-    ax.set_ylabel("class")
-    ax.set_yticks(classes)
-    ax.set_xlabel("rotation angle (º)")
-    ax.set_xticks(np.arange(len(rotations)))
-    ax.set_xticklabels(np.round(rotations),fontsize=6)
-
-    f.colorbar(im)
-    plt.show()
-    return f
-
-
-
-
-
-
 # train_dataset, rotated_train_dataset = get_data_generator(dataset.x_train, dataset.y_train, config.batch_size)
 # test_dataset, rotated_test_dataset = get_data_generator(dataset.x_test, dataset.y_test, config.batch_size)
 
@@ -73,36 +55,18 @@ def evaluate_class(dataset,model,config,rotations,batch_size):
     return np.array(mean_accuracies)
 
 
-class RunningMeanAndVariance:
 
-    def __init__(self):
-        self.n = 0
-        self.old_m = 0
-        self.new_m = 0
-        self.old_s = 0
-        self.new_s = 0
+def plot_results(mean_accuracies,classes,rotations):
+    f,ax=plt.subplots(1,1,dpi=200)
+    im=ax.imshow(mean_accuracies,vmin=0,vmax=1,cmap="inferno")
+    #ax.axis("off")
+    ax.set_ylabel("class")
+    ax.set_yticks(classes)
+    ax.set_xlabel("rotation angle (º)")
+    ax.set_xticks(np.arange(len(rotations)))
+    ax.set_xticklabels(np.round(rotations),fontsize=6)
 
-    def clear(self):
-        self.n = 0
+    f.colorbar(im)
+    plt.show()
+    return f
 
-    def update(self, x):
-        self.n += 1
-
-        if self.n == 1:
-            self.old_m = self.new_m = x
-            self.old_s = 0
-        else:
-            self.new_m = self.old_m + (x - self.old_m) / self.n
-            self.new_s = self.old_s + (x - self.old_m) * (x - self.new_m)
-
-            self.old_m = self.new_m
-            self.old_s = self.new_s
-
-    def mean(self):
-        return self.new_m if self.n else 0.0
-
-    def var(self):
-        return self.new_s / (self.n - 1) if self.n > 1 else 0.0
-
-    def std(self):
-        return np.sqrt(self.var())
