@@ -55,7 +55,7 @@ class ImageDataset(Dataset):
         for i in idx:
             image= self.transform(self.x[i, :, :, :])
             images.append(image)
-        y = self.y[idx, :].argmax(axis=1)
+        y = torch.from_numpy(self.y[idx, :].argmax(axis=1))
         x= torch.stack(images,0)
         return x,y
     def get_all(self):
@@ -65,7 +65,7 @@ class ImageDataset(Dataset):
 
 def get_data_generator(x,y,batch_size):
     image_dataset=ImageDataset(x,y)
-    dataset=DataLoader(image_dataset,batch_size=batch_size,shuffle=True,num_workers=1)
+    dataset=DataLoader(image_dataset,batch_size=batch_size,shuffle=True,num_workers=0)
     image_rotated_dataset = ImageDataset(x, y, rotation=180)
     rotated_dataset = DataLoader(image_rotated_dataset , batch_size=batch_size, shuffle=True, num_workers=1)
 

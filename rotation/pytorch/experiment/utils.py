@@ -2,6 +2,10 @@ import numpy as np
 
 class RunningMeanAndVariance:
 
+    def __repr__(self):
+
+        return f"RunningMeanAndVariance(n={self.n},mean={self.mean().shape})"
+
     def __init__(self):
         self.n = 0
         self.old_m = 0

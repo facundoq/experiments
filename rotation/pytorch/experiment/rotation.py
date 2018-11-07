@@ -12,14 +12,14 @@ import torch
 from utils import autolabel
 
 
-TrainRotatedConfig = namedtuple('TrainRotatedConfig', 'dataset_name batch_size epochs pre_rotated_epochs rotated_epochs optimizer rotated_optimizer use_cuda')
+TrainRotatedConfig = namedtuple('TrainRotatedConfig', 'batch_size epochs pre_rotated_epochs rotated_epochs optimizer rotated_optimizer use_cuda')
 
-def run(config,model, rotated_model, x_train, y_train, x_test, y_test,
+def run(config,model, rotated_model, dataset,
                   plot_accuracy=False,loss_function=torch.nn.NLLLoss(),save_plots=False):
 
-    os.makedirs(experiment_plot_path(model.name, config.dataset_name),exist_ok=True)
-    train_dataset,rotated_train_dataset=get_data_generator(x_train,y_train, config.batch_size)
-    test_dataset, rotated_test_dataset = get_data_generator(x_test, y_test, config.batch_size)
+    os.makedirs(experiment_plot_path(model.name, dataset.name),exist_ok=True)
+    train_dataset,rotated_train_dataset=get_data_generator(dataset.x_train,dataset.y_train, config.batch_size)
+    test_dataset, rotated_test_dataset = get_data_generator(dataset.x_test, dataset.y_test, config.batch_size)
 
     # UNROTATED DATASET
     if config.epochs == 0:
@@ -29,7 +29,7 @@ def run(config,model, rotated_model, x_train, y_train, x_test, y_test,
         print("Training model with unrotated dataset...",flush=True)
         history = train(model,config.epochs,config.optimizer,config.use_cuda,train_dataset,test_dataset,loss_function)
         if plot_accuracy:
-            accuracy_plot_path =plot_history(history,"unrotated",model.name,config.dataset_name,save_plots)
+            accuracy_plot_path =plot_history(history,"unrotated",model.name,dataset.name,save_plots)
 
     # ROTATED MODEL, UNROTATED DATASET
     if config.pre_rotated_epochs == 0:
@@ -39,7 +39,7 @@ def run(config,model, rotated_model, x_train, y_train, x_test, y_test,
         pre_rotated_history = train(rotated_model, config.rotated_epochs, config.rotated_optimizer, config.use_cuda,
                                 train_dataset,test_dataset,loss_function)
         if plot_accuracy:
-            plot_history(pre_rotated_history,"pre_rotated",model.name,config.dataset_name,save_plots)
+            plot_history(pre_rotated_history,"pre_rotated",model.name,dataset.name,save_plots)
 
 
         # ROTATED DATASET
@@ -50,7 +50,7 @@ def run(config,model, rotated_model, x_train, y_train, x_test, y_test,
         rotated_history = train(rotated_model, config.rotated_epochs, config.rotated_optimizer, config.use_cuda,
                                 rotated_train_dataset,rotated_test_dataset,loss_function)
         if plot_accuracy:
-            rotated_accuracy_plot_path=plot_history(rotated_history,"rotated",rotated_model.name,config.dataset_name,save_plots)
+            rotated_accuracy_plot_path=plot_history(rotated_history,"rotated",rotated_model.name,dataset.name,save_plots)
 
     print("Testing both models on both datasets...",flush=True)
 
@@ -58,8 +58,8 @@ def run(config,model, rotated_model, x_train, y_train, x_test, y_test,
     datasets = {"test_dataset": test_dataset, "rotated_test_dataset": rotated_test_dataset,
                  "train_dataset": train_dataset, "rotated_train_dataset": rotated_train_dataset}
     scores=eval_scores(models,datasets,config,loss_function)
-    train_test_path=train_test_accuracy_barchart2(scores,model,rotated_model,config,save_plots)
-    experiment_plot = os.path.join("plots",f"{model.name}_{config.dataset_name}_train_rotated.png")
+    train_test_path=train_test_accuracy_barchart2(scores,model.name,dataset.name,save_plots)
+    experiment_plot = os.path.join("plots",f"{model.name}_{dataset.name}_train_rotated.png")
 
     os.system(f"convert {accuracy_plot_path} {rotated_accuracy_plot_path} {train_test_path} +append {experiment_plot}")
     return scores
@@ -85,16 +85,16 @@ def write_scores(scores,output_file,general_message,config=None):
         f.write("\n\n")
 
 
-def train_test_accuracy_barchart2(scores,model,rotated_model,config,savefig):
+def train_test_accuracy_barchart2(scores,model_name,dataset_name,savefig):
     test_dataset_scores = [scores["model_test_dataset"][1], scores["rotated_model_test_dataset"][1]]
     rotated_test_dataset_scores = [scores["model_rotated_test_dataset"][1], scores["rotated_model_rotated_test_dataset"][1]]
     accuracies = np.array([test_dataset_scores, rotated_test_dataset_scores])
-    return train_test_accuracy_barchart(model.name, config.dataset_name, accuracies,savefig)
+    return train_test_accuracy_barchart(model_name, dataset_name, accuracies,savefig)
 
-def experiment_plot_path(model,dataset):
-    return f"plots/rotated_model/{model}/{dataset.name}"
+def experiment_plot_path(model_name,dataset_name):
+    return f"plots/rotated_model/{model_name}/{dataset_name}"
 
-def train_test_accuracy_barchart(model, dataset, accuracies,savefig):
+def train_test_accuracy_barchart(model_name, dataset_name, accuracies,savefig):
     import os
     # Accuracies:    |   Train unrotated   |   Train rotated
     # Test unrotated |                     |
@@ -127,19 +127,19 @@ def train_test_accuracy_barchart(model, dataset, accuracies,savefig):
     autolabel(rects1, ax)
     autolabel(rects2, ax)
     fig.tight_layout()
-    path=os.path.join(experiment_plot_path(model,dataset), f"train_test.png")
+    path=os.path.join(experiment_plot_path(model_name,dataset_name), f"train_test.png")
     if savefig:
         plt.savefig(path)
     plt.show()
     return path
 
 
-def plot_history(history,name,model_name,dataset,savefig):
+def plot_history(history,name,model_name,dataset_name,savefig):
     from time import gmtime, strftime
     t=strftime("%Y_%m_%d_%H_%M_%S", gmtime())
     import os
     f, (a1,a2) = plt.subplots(1,2)
-    path= experiment_plot_path(model_name, dataset.name)
+    path= experiment_plot_path(model_name, dataset_name)
     path=os.path.join(path,f"{name}.png")
     # accuracy
     a1.plot(history['acc'])
@@ -156,7 +156,7 @@ def plot_history(history,name,model_name,dataset,savefig):
     a2.set_ylabel('loss')
     a2.set_xlabel('epoch')
     a2.legend(['train', 'test'], loc='upper right')
-    f.suptitle(f"{model_name} trained with {name} {dataset.name}")
+    f.suptitle(f"{model_name} trained with {name} {dataset_name}")
     plt.subplots_adjust(wspace=0.3)
     if savefig:
         plt.savefig(path)
