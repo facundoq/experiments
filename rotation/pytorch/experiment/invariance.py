@@ -43,7 +43,7 @@ def eval_invariance_measure(dataset,model,config,rotations,batch_size):
     return normalized_layer_invariances
 
 def calculate_invariance_measure(layer_baselines, layer_measures):
-    eps=1e-12
+    eps=0
     measures = []  # coefficient of variations
     for layer_baseline, layer_measure in zip(layer_baselines, layer_measures):
         normalized_measure = layer_measure[layer_baseline > eps] / layer_baseline[layer_baseline > eps]
@@ -151,7 +151,7 @@ def transform_activations(activations_gpu):
 
 
 
-def plot_class_outputs(class_id, cvs, names):
+def plot_class_outputs(class_id, cvs, names,model_name,dataset_name,savefig):
     n = len(names)
     f, axes = plt.subplots(1, n, dpi=150)
     max_cv = max([cv.max() for cv in cvs])
@@ -170,11 +170,14 @@ def plot_class_outputs(class_id, cvs, names):
     f.subplots_adjust(right=0.8)
     cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
     f.colorbar(mappable, cax=cbar_ax)
+    if savefig:
+        path=os.path.join("plots","invariance",f"invariance_{model_name}_{dataset_name}_class{class_id}.png")
+        plt.savefig(path)
     plt.show()
 
-def plot(all_stds,model,classes):
+def plot(all_stds,model,dataset_name,classes,savefig=False):
 
     for i,c in enumerate(classes):
         stds=all_stds[i]
-        plot_class_outputs(c, stds, model.intermediates_names())
+        plot_class_outputs(c, stds, model.intermediates_names(),model.name,dataset_name,savefig)
 
