@@ -2,16 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class SequentialWithIntermediates(nn.Sequential):
-    def __init__(self,*args):
-        super(SequentialWithIntermediates, self).__init__(*args)
-
-    def forward_intermediates(self,input_tensor):
-        outputs=[]
-        for module in self._modules.values():
-            input_tensor= module(input_tensor)
-            outputs.append(input_tensor)
-        return input_tensor,outputs
+from pytorch.model.util import SequentialWithIntermediates
 
 class SimpleConv(nn.Module):
     def __init__(self,input_shape,num_classes,conv_filters=32,fc_filters=128):
@@ -55,9 +46,6 @@ class SimpleConv(nn.Module):
                 nn.ReLU(),
                 nn.Linear(fc_filters, num_classes)
                 )
-
-
-
 
     def forward(self, x):
         x = self.conv(x)

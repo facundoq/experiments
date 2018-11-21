@@ -6,6 +6,7 @@
 
 import torch.nn as nn
 import torch.nn.functional as F
+from pytorch.model.util import Flatten
 
 class ConvBNRelu(nn.Module):
 
@@ -53,7 +54,6 @@ class VGGLike(nn.Module):
         )
 
     def forward(self, x):
-
         x=self.conv_layers.forward(x)
         x=self.dense_layers.forward(x)
         x=F.log_softmax(x, dim=1)

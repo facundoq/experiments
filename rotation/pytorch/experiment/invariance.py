@@ -14,8 +14,10 @@ from pytorch.dataset import get_data_generator
 from pytorch.dataset import ImageDataset
 
 def run_all_dataset(model,dataset,config,rotations,batch_size=256):
+    n=dataset.x_test.shape[0]
+    effective_batch_size = min(n, batch_size)
     dataset= ImageDataset(dataset.x_test,dataset.y_test, rotation=True)
-    layer_invariances = eval_invariance_measure(dataset, model, config, rotations, batch_size)
+    layer_invariances = eval_invariance_measure(dataset, model, config, rotations, effective_batch_size)
     return [layer_invariances],[0]
 
 def run(model,dataset,config,rotations,batch_size=256):
@@ -31,8 +33,10 @@ def run(model,dataset,config,rotations,batch_size=256):
         ids=np.where(y_ids==c)
         ids=ids[0]
         x_class,y_class=x[ids,:],y[ids]
+        n=x_class.shape[0]
         class_dataset=ImageDataset(x_class,y_class,rotation=True)
-        layer_invariances=eval_invariance_measure(class_dataset, model, config, rotations, batch_size)
+        effective_batch_size=min(n,batch_size)
+        layer_invariances=eval_invariance_measure(class_dataset, model, config, rotations, effective_batch_size)
         class_layer_invariances.append(layer_invariances)
     return class_layer_invariances,classes
 
@@ -45,7 +49,9 @@ def eval_invariance_measure(dataset,model,config,rotations,batch_size):
 def calculate_invariance_measure(layer_baselines, layer_measures):
     eps=0
     measures = []  # coefficient of variations
+
     for layer_baseline, layer_measure in zip(layer_baselines, layer_measures):
+        #print(layer_baseline.shape, layer_measure.shape)
         normalized_measure = layer_measure[layer_baseline > eps] / layer_baseline[layer_baseline > eps]
         measures.append(normalized_measure)
     return measures
@@ -163,7 +169,7 @@ def plot_class_outputs(class_id, cvs, names,model_name,dataset_name,savefig):
         cv = cv[:, np.newaxis]
         mappable=ax.imshow(cv,vmin=0,vmax=max_cv,cmap='inferno')
         #mappable = ax.imshow(cv, cmap='inferno')
-        ax.set_title(name, fontsize=7)
+        ax.set_title(name, fontsize=5)
 
         # logging.debug(f"plotting stats of layer {name} of class {class_id}, shape {stat.mean().shape}")
     f.suptitle(f"sigma for class {class_id}")

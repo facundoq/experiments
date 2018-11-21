@@ -22,6 +22,8 @@ class ImageDataset(Dataset):
         self.y=y
         mu = x.mean(axis=(0, 1, 2))/255
         std = x.std(axis=(0, 1, 2))/255
+        std[std == 0] = 1
+
         transformations=[transforms.ToPILImage(),
                         transforms.ToTensor(),
                         transforms.Normalize(mu, std),
