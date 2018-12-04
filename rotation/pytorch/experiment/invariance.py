@@ -157,17 +157,16 @@ def transform_activations(activations_gpu):
 
 
 
-def plot_class_outputs(class_id, cvs, names,model_name,dataset_name,savefig,savefig_suffix):
+def plot_class_outputs(class_id, cvs,vmin,vmax, names,model_name,dataset_name,savefig,savefig_suffix):
     n = len(names)
     f, axes = plt.subplots(1, n, dpi=150)
-    max_cv = max([cv.max() for cv in cvs])
+
 
     for i, (cv, name) in enumerate(zip(cvs, names)):
         ax = axes[i]
         ax.axis("off")
-
         cv = cv[:, np.newaxis]
-        mappable=ax.imshow(cv,vmin=0,vmax=max_cv,cmap='inferno')
+        mappable=ax.imshow(cv,vmin=vmin,vmax=vmax,cmap='inferno',aspect="auto")
         #mappable = ax.imshow(cv, cmap='inferno')
         ax.set_title(name, fontsize=5)
 
@@ -175,15 +174,42 @@ def plot_class_outputs(class_id, cvs, names,model_name,dataset_name,savefig,save
     f.suptitle(f"sigma for class {class_id}")
     f.subplots_adjust(right=0.8)
     cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
-    f.colorbar(mappable, cax=cbar_ax)
+    cbar=f.colorbar(mappable, cax=cbar_ax, extend='max')
+    cbar.cmap.set_over('green')
     if savefig:
         image_name=f"invariance_{model_name}_{dataset_name}_{savefig_suffix}_class{class_id}.png"
         path=os.path.join("plots","invariance",image_name)
         plt.savefig(path)
     plt.show()
 
-def plot(all_stds,model,dataset_name,classes,savefig=False,savefig_suffix="",class_names=None):
+def pearson_outlier_range(values,iqr_away=5):
+    p50 = np.median(values)
+    p75 = np.percentile(values, 75)
+    p25 = np.percentile(values, 25)
+    iqr = p75 - p25
 
+    range = (p50 - iqr_away * iqr, p50 + iqr_away * iqr)
+    return range
+
+def outlier_range_both(rotated_stds,unrotated_stds):
+    rmin,rmax=outlier_range(rotated_stds)
+    umin,umax= outlier_range(unrotated_stds)
+
+    return (max(rmin,umin),min(rmax,umax))
+
+def outlier_range(stds):
+
+    #print(stds[0][0].shape)
+    class_values=[np.hstack(class_stds) for class_stds in stds]
+    values=np.hstack(class_values)
+
+    return pearson_outlier_range(values)
+    #min_stds_all = min([min([std.min() for std in class_stds]) for class_stds in log_stds])
+    #max_stds_all = max([max([std.max() for std in class_stds]) for class_stds in stds])
+
+def plot(all_stds,model,dataset_name,classes,savefig=False,savefig_suffix="",class_names=None,vmax=None):
+
+    vmin=0
 
     for i,c in enumerate(classes):
         stds=all_stds[i]
@@ -191,5 +217,7 @@ def plot(all_stds,model,dataset_name,classes,savefig=False,savefig_suffix="",cla
             name=class_names[c]
         else:
             name=str(c)
-        plot_class_outputs(name, stds, model.intermediates_names(),model.name,dataset_name,savefig,savefig_suffix)
+        plot_class_outputs(name, stds,vmin,vmax, model.intermediates_names(),model.name,
+                           dataset_name,savefig,
+                           savefig_suffix)
 
