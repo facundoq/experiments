@@ -28,6 +28,7 @@ def run(model,dataset,config,rotations,batch_size=256):
     classes.sort()
 
     class_layer_invariances=[]
+    # calculate the invariance measure for each class
     for i, c in enumerate(classes):
         # logging.debug(f"Evaluating invariances for class {c}...")
         ids=np.where(y_ids==c)
@@ -38,12 +39,32 @@ def run(model,dataset,config,rotations,batch_size=256):
         effective_batch_size=min(n,batch_size)
         layer_invariances=eval_invariance_measure(class_dataset, model, config, rotations, effective_batch_size)
         class_layer_invariances.append(layer_invariances)
-    return class_layer_invariances,classes
+    stratified_layer_invariances=eval_stratified_invariance(class_layer_invariances)
 
+    return class_layer_invariances,stratified_layer_invariances,classes
+
+# calculate the mean activation of each unit in each layer over the set of classes
+def eval_stratified_invariance(class_layer_invariances):
+
+    layer_class_invariances=[list(i) for i in zip(*class_layer_invariances)]
+    layer_invariances=[ sum(layer_values)/len(layer_values) for layer_values in layer_class_invariances]
+    return [layer_invariances]
+
+# calculate the invariance measure for a given dataset and model
 def eval_invariance_measure(dataset,model,config,rotations,batch_size):
+    #baseline invariances
     layer_invariances_baselines=get_baseline_variance_class(dataset,model,config,rotations,batch_size)
     layer_invariances = eval_invariance_class(dataset, model, config, rotations,batch_size)
     normalized_layer_invariances = calculate_invariance_measure(layer_invariances_baselines,layer_invariances)
+
+    # for i in range(len(layer_invariances_baselines)):
+    #     print(f"class {i}")
+    #     n=len(layer_invariances_baselines[i])
+    #     print([ type(layer_invariances_baselines[i][j]) for j in range(n)])
+    #     print([type(layer_invariances[i][j]) for j in range(n)])
+    #     print([type(normalized_layer_invariances[i][j]) for j in range(n)])
+
+
     return normalized_layer_invariances
 
 def calculate_invariance_measure(layer_baselines, layer_measures):
@@ -52,7 +73,12 @@ def calculate_invariance_measure(layer_baselines, layer_measures):
 
     for layer_baseline, layer_measure in zip(layer_baselines, layer_measures):
         #print(layer_baseline.shape, layer_measure.shape)
-        normalized_measure = layer_measure[layer_baseline > eps] / layer_baseline[layer_baseline > eps]
+        normalized_measure= layer_measure.copy()
+        normalized_measure[layer_baseline > eps] /= layer_baseline[layer_baseline > eps]
+        both_below_eps=np.logical_and(layer_baseline <= eps,layer_measure <= eps )
+        normalized_measure[both_below_eps] = 1
+        only_baseline_below_eps=np.logical_and(layer_baseline <= eps,layer_measure > eps )
+        normalized_measure[only_baseline_below_eps] = np.inf
         measures.append(normalized_measure)
     return measures
 
@@ -176,13 +202,14 @@ def plot_class_outputs(class_id, cvs,vmin,vmax, names,model_name,dataset_name,sa
     cbar_ax = f.add_axes([0.85, 0.15, 0.05, 0.7])
     cbar=f.colorbar(mappable, cax=cbar_ax, extend='max')
     cbar.cmap.set_over('green')
+    cbar.cmap.set_bad(color='blue')
     if savefig:
         image_name=f"invariance_{model_name}_{dataset_name}_{savefig_suffix}_class{class_id}.png"
         path=os.path.join("plots","invariance",image_name)
         plt.savefig(path)
     plt.show()
 
-def pearson_outlier_range(values,iqr_away=5):
+def pearson_outlier_range(values,iqr_away):
     p50 = np.median(values)
     p75 = np.percentile(values, 75)
     p25 = np.percentile(values, 25)
@@ -191,21 +218,21 @@ def pearson_outlier_range(values,iqr_away=5):
     range = (p50 - iqr_away * iqr, p50 + iqr_away * iqr)
     return range
 
-def outlier_range_both(rotated_stds,unrotated_stds):
-    rmin,rmax=outlier_range(rotated_stds)
-    umin,umax= outlier_range(unrotated_stds)
+def outlier_range_both(rotated_stds,unrotated_stds,iqr_away=5):
+    rmin,rmax=outlier_range(rotated_stds,iqr_away)
+    umin,umax= outlier_range(unrotated_stds,iqr_away)
 
     return (max(rmin,umin),min(rmax,umax))
 
-def outlier_range(stds):
-
-    #print(stds[0][0].shape)
+def outlier_range(stds,iqr_away):
     class_values=[np.hstack(class_stds) for class_stds in stds]
     values=np.hstack(class_values)
 
-    return pearson_outlier_range(values)
-    #min_stds_all = min([min([std.min() for std in class_stds]) for class_stds in log_stds])
-    #max_stds_all = max([max([std.max() for std in class_stds]) for class_stds in stds])
+    pmin,pmax=pearson_outlier_range(values,iqr_away)
+    # if the pearson outlier range is away from the max and/or min, use max/or and min instead
+    min_stds_all = min([min([std.min() for std in class_stds]) for class_stds in stds])
+    max_stds_all = max([max([std.max() for std in class_stds]) for class_stds in stds])
+    return ( max(pmin,min_stds_all),min(pmax,max_stds_all))
 
 def plot(all_stds,model,dataset_name,classes,savefig=False,savefig_suffix="",class_names=None,vmax=None):
 
@@ -220,4 +247,33 @@ def plot(all_stds,model,dataset_name,classes,savefig=False,savefig_suffix="",cla
         plot_class_outputs(name, stds,vmin,vmax, model.intermediates_names(),model.name,
                            dataset_name,savefig,
                            savefig_suffix)
+def plot_collapsing_layers(rotated_measures,measures,rotated_model,model,dataset_name,labels):
+    rotated_measures_collapsed=collapse_measure_layers(rotated_measures)
+    measures_collapsed=collapse_measure_layers(measures)
+    n=len(rotated_measures)
+    assert(n==len(measures))
+    assert (n == len(labels))
+
+    color = plt.cm.hsv(np.linspace(0.1, 0.9, n))
+
+
+    f,ax=plt.subplots(dpi=min(300,n*15))
+    for rotated_measure,measure,label,i in zip(rotated_measures_collapsed,measures_collapsed,labels,range(n)):
+        x=np.arange(rotated_measure.shape[0])
+        ax.plot(x,rotated_measure,label="rotated_"+label,linestyle="-",color=color[i,:])
+        ax.plot(np.arange(measure.shape[0]),measure,label="unrotated_"+label,linestyle="--",color=color[i,:])
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    # reverse the order
+    ax.legend(handles[::-1], labels[::-1],bbox_to_anchor=(1.5, 1.05))
+
+    plt.show()
+
+
+
+def collapse_measure_layers(measures):
+    return [np.array([np.mean(layer) for layer in measure]) for measure in measures]
+
+
 
