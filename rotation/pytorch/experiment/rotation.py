@@ -8,6 +8,7 @@ import os
 from pytorch.dataset import get_data_generator
 import torch
 
+import logging
 
 from utils import autolabel
 
@@ -23,19 +24,19 @@ def run(config,model, rotated_model, dataset,
 
     # UNROTATED DATASET
     if config.epochs == 0:
-        print("Skipping training model with unrotated dataset")
+        print(f"### Skipping training model |{model.name}| with unrotated dataset |{dataset.name}|")
         history={}
     else:
-        print("Training model with unrotated dataset...",flush=True)
+        print(f"### Training model |{model.name}| with unrotated dataset |{dataset.name}|...",flush=True)
         history = train(model,config.epochs,config.optimizer,config.use_cuda,train_dataset,test_dataset,loss_function)
         if plot_accuracy:
             accuracy_plot_path =plot_history(history,"unrotated",model.name,dataset.name,save_plots)
 
     # ROTATED MODEL, UNROTATED DATASET
     if config.pre_rotated_epochs == 0:
-        print("Skipping pretraining rotated model with unrotated dataset")
+        print(f"### Skipping pretraining rotated model |{model.name}| with unrotated dataset |{dataset.name}|")
     else:
-        print("Pretraining rotated model with unrotated dataset...",flush=True)
+        print(f"### Pretraining rotated model |{model.name}| with unrotated dataset |{dataset.name}|...",flush=True)
         pre_rotated_history = train(rotated_model, config.rotated_epochs, config.rotated_optimizer, config.use_cuda,
                                 train_dataset,test_dataset,loss_function)
         if plot_accuracy:
@@ -44,15 +45,15 @@ def run(config,model, rotated_model, dataset,
 
         # ROTATED DATASET
     if config.rotated_epochs == 0:
-        print("Skipping pre-training of rotated model with unrotated dataset")
+        print(f"### Skipping training of rotated model |{model.name}| with rotated dataset |{dataset.name}|")
     else:
-        print("Training rotated model with rotated dataset...",flush=True)
+        print(f"### Training rotated model |{model.name}| with rotated dataset |{dataset.name}|...",flush=True)
         rotated_history = train(rotated_model, config.rotated_epochs, config.rotated_optimizer, config.use_cuda,
                                 rotated_train_dataset,rotated_test_dataset,loss_function)
         if plot_accuracy:
             rotated_accuracy_plot_path=plot_history(rotated_history,"rotated",rotated_model.name,dataset.name,save_plots)
 
-    print("Testing both models on both datasets...",flush=True)
+    print("### Testing both models on both datasets...",flush=True)
 
     models = {"rotated_model": rotated_model, "model": model}
     datasets = {"test_dataset": test_dataset, "rotated_test_dataset": rotated_test_dataset,
@@ -62,12 +63,9 @@ def run(config,model, rotated_model, dataset,
     experiment_plot = os.path.join("plots",f"{model.name}_{dataset.name}_train_rotated.png")
 
     os.system(f"convert {accuracy_plot_path} {rotated_accuracy_plot_path} {train_test_path} +append {experiment_plot}")
+    logging.info("training info saved to {experiment_plot}")
+
     return scores
-
-
-
-
-
 
 
 def write_scores(scores,output_file,general_message,config=None):
@@ -92,7 +90,10 @@ def train_test_accuracy_barchart2(scores,model_name,dataset_name,savefig):
     return train_test_accuracy_barchart(model_name, dataset_name, accuracies,savefig)
 
 def experiment_plot_path(model_name,dataset_name):
-    return f"plots/rotated_model/{model_name}/{dataset_name}"
+    return f"plots/rotated_model/{model_name}_{dataset_name}"
+
+def experiment_model_path(model_name,dataset_name):
+    return f"models/{model_name}_{dataset_name}"
 
 def train_test_accuracy_barchart(model_name, dataset_name, accuracies,savefig):
     import os
@@ -164,3 +165,43 @@ def plot_history(history,name,model_name,dataset_name,savefig):
     return path
 
 
+MODEL_SAVE_FILENAME="models.pt"
+
+def save_models(dataset,model,rotated_model,scores,config):
+    model_folderpath = experiment_model_path(model.name, dataset.name)
+    if not os.path.exists(model_folderpath):
+        os.makedirs(model_folderpath)
+    filepath=os.path.join(model_folderpath,MODEL_SAVE_FILENAME)
+    torch.save({"rotated":rotated_model.state_dict(),
+                "unrotated": model.state_dict(),
+                "scores":scores,
+                "config":config,
+    }, filepath)
+from pytorch.experiment import models
+
+def load_models(dataset,model_name,use_cuda):
+    models_state=load_models_state(dataset.name,model_name)
+    model,optimizer,rotated_model,rotated_optimizer=models.get_model(model_name,dataset,use_cuda)
+    model.load_state_dict(models_state["unrotated"])
+    rotated_model.load_state_dict(models_state["unrotated"])
+    model.eval()
+    rotated_model.eval()
+    return model,rotated_model,models_state["scores"],models_state["config"]
+
+def load_models_state(dataset_name,model_name):
+    model_folderpath = experiment_model_path(model_name, dataset_name)
+    model_filepath=os.path.join(model_folderpath,MODEL_SAVE_FILENAME)
+    if not os.path.exists(model_filepath):
+        message=f"The model |{model_name}| was not trained on dataset " \
+                f"|{dataset_name}| ({model_filepath} does not exist)." \
+                f"Run experiment_rotation.py to generate the model"
+        raise ValueError(message)
+    else:
+        logging.info(f"Loading model from {model_filepath}...")
+    models=torch.load(model_filepath)
+    return models
+
+
+def print_scores(scores):
+    for k, v in scores.items():
+        print('%s score: loss=%f, accuracy=%f' % (k, v[0], v[1]))
