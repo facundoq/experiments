@@ -5,9 +5,11 @@ import torch.nn.functional as F
 from pytorch.model.util import SequentialWithIntermediates
 
 class SimpleConv(nn.Module):
+
+
     def __init__(self,input_shape,num_classes,conv_filters=32,fc_filters=128):
         super(SimpleConv, self).__init__()
-        self.name="SimpleConv"
+        self.name=self.__class__.__name__
         h,w,channels=input_shape
 
         # self.conv=nn.Sequential(

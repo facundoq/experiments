@@ -2,6 +2,7 @@ from torch.utils.data import Dataset,DataLoader
 from torchvision import transforms
 import torch
 from PIL import Image
+import numpy as np
 
 class ClassificationDataset:
     def __init__(self,name,x_train,x_test,y_train,y_test,num_classes,input_shape):
@@ -12,6 +13,15 @@ class ClassificationDataset:
         self.y_test=y_test
         self.num_classes=num_classes
         self.input_shape=input_shape
+    def summary(self):
+        result=""
+        result+=f"x_train: {self.x_train.shape}, {self.x_train.dtype}\n"
+        result+=f"x_test: {self.x_test.shape}, {self.x_test.dtype}\n"
+        result+=f"y_train: {self.y_train.shape}, {self.y_train.dtype}\n"
+        result+=f"y_test: {self.y_test.shape}, {self.y_test.dtype}\n"
+        result+=f"Classes {np.unique(self.y_train.argmax(axis=1))}\n"
+        result+=f"min class/max class: {self.y_train.min()} {self.y_train.max()}"
+        return result
 
 
 class ImageDataset(Dataset):
@@ -72,3 +82,9 @@ def get_data_generator(x,y,batch_size):
     rotated_dataset = DataLoader(image_rotated_dataset , batch_size=batch_size, shuffle=True, num_workers=1)
 
     return dataset,rotated_dataset
+
+import datasets
+
+def get_dataset(name):
+    (x_train, y_train), (x_test, y_test), input_shape, num_classes = datasets.get_data(name)
+    return ClassificationDataset(name, x_train, x_test, y_train, y_test, num_classes, input_shape)

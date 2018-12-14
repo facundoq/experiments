@@ -5,7 +5,7 @@ from pytorch.model.util import SequentialWithIntermediates
 class AllConvolutional(nn.Module):
     def __init__(self, input_shape, num_classes=10,filters=96,dropout=False):
         super(AllConvolutional, self).__init__()
-        self.name="AllConvolutional"
+        self.name = self.__class__.__name__
         h,w,c=input_shape
         filters2=filters*2
         self.dropout=dropout
@@ -108,8 +108,8 @@ class ConvBNAct(nn.Module):
 
 class AllConv(nn.Module):
     def __init__(self, input_shape, num_classes, filters=96):
-        super(AllConv, self).__init__()
-        self.name = "AllConvolutional"
+        super(AllConv, reself).__init__()
+        self.name = self.__class__.__name__
         filters2 = filters * 2
         h, w, channels = input_shape
 
