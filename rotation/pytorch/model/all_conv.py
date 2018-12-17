@@ -108,7 +108,7 @@ class ConvBNAct(nn.Module):
 
 class AllConv(nn.Module):
     def __init__(self, input_shape, num_classes, filters=96):
-        super(AllConv, reself).__init__()
+        super(AllConv, self).__init__()
         self.name = self.__class__.__name__
         filters2 = filters * 2
         h, w, channels = input_shape
