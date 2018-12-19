@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 
 class ClassificationDataset:
-    def __init__(self,name,x_train,x_test,y_train,y_test,num_classes,input_shape):
+    def __init__(self,name,x_train,x_test,y_train,y_test,num_classes,input_shape,labels):
         self.name=name
         self.x_train=x_train
         self.x_test=x_test
@@ -13,6 +13,7 @@ class ClassificationDataset:
         self.y_test=y_test
         self.num_classes=num_classes
         self.input_shape=input_shape
+        self.labels=labels
     def summary(self):
         result=""
         result+=f"x_train: {self.x_train.shape}, {self.x_train.dtype}\n"
@@ -86,5 +87,5 @@ def get_data_generator(x,y,batch_size):
 import datasets
 
 def get_dataset(name):
-    (x_train, y_train), (x_test, y_test), input_shape, num_classes = datasets.get_data(name)
-    return ClassificationDataset(name, x_train, x_test, y_train, y_test, num_classes, input_shape)
+    (x_train, y_train), (x_test, y_test), input_shape, num_classes, labels = datasets.get_data(name)
+    return ClassificationDataset(name, x_train, x_test, y_train, y_test, num_classes, input_shape,labels)

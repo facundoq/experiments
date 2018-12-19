@@ -1,3 +1,7 @@
+## NOTE:
+## You should run "experiment_rotation.py" before this script to generate the models for
+## a given dataset/model combination
+
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
@@ -6,14 +10,21 @@ plt.rcParams['image.cmap'] = 'gray'
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
+
+
 import pytorch_models
 from pytorch import dataset as datasets
 import torch
+import pytorch.experiment.utils as utils
 
-model_name=pytorch_models.AllConv.__name__
-dataset_name="cifar10"
-print(f"### Loading dataset {dataset_name} and model {model_name}.")
-verbose=True
+model_name,dataset_name=utils.parse_model_and_dataset("Variance Experiment.")
+# model_name=pytorch_models.AllConv.__name__
+# model_name=pytorch_models.SimpleConv.__name__
+# dataset_name="mnist"
+
+
+print(f"### Loading dataset {dataset_name} and model {model_name}....")
+verbose=False
 
 use_cuda=torch.cuda.is_available()
 
@@ -30,4 +41,8 @@ if verbose:
     rotation.print_scores(scores)
 
 from pytorch.experiment import variance
-variance.run_and_plot_all(model,rotated_model,dataset, config, n_rotations = 16)
+logging.info("Plotting...")
+n_rotations=16
+results=variance.run_all(model,rotated_model,dataset, config, n_rotations)
+variance.plot_all(model,rotated_model,dataset,results)
+#variance.run_and_plot_all(model,rotated_model,dataset, config, n_rotations = 16)

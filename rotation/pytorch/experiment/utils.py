@@ -37,3 +37,21 @@ class RunningMeanAndVariance:
 
     def std(self):
         return np.sqrt(self.var())
+
+
+import argparse
+import pytorch.experiment.models as models
+import datasets
+
+def parse_model_and_dataset(description):
+
+    parser = argparse.ArgumentParser(description=description)
+
+    parser.add_argument('model', metavar='m',
+                        help=f'Model to train/use. Allowed values: {", ".join(models.get_model_names())}'
+                        , choices=models.get_model_names())
+    parser.add_argument('dataset', metavar='d',
+                        help=f'Dataset to train/eval model. Allowed values: {", ".join(datasets.names)}'
+                        ,choices=datasets.names)
+    args = parser.parse_args()
+    return args.model,args.dataset

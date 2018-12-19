@@ -4,6 +4,8 @@ from keras import backend as K
 import keras
 import numpy as np
 
+names=["mnist","fashion_mnist","cifar10","mnist_rot","cluttered_mnist","lsa16","pugeault"]
+
 def get_data(dataset="mnist",dataformat="NHWC"):
     # the data, shuffled and split between train and test sets
     if (dataset=="mnist"):
@@ -42,6 +44,8 @@ def get_data(dataset="mnist",dataformat="NHWC"):
     elif dataset == "pugeault":
         x_train, x_test, y_train, y_test, img_channels, img_rows, img_cols = pugeault.load_data()
         num_classes = 25
+        import string
+        labels=string.ascii_lowercase[:25]
     else:
         raise ValueError("Unknown dataset: %s" % dataset)
 
@@ -70,4 +74,4 @@ def get_data(dataset="mnist",dataformat="NHWC"):
     # y_train = y_train.astype("float32")
     # y_test = y_test.astype("float32")
 
-    return (x_train, y_train), (x_test, y_test), input_shape,num_classes
+    return (x_train, y_train), (x_test, y_test), input_shape,num_classes,labels

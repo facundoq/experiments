@@ -10,21 +10,29 @@ use_cuda=torch.cuda.is_available()
 
 # DATASET
 from pytorch import dataset as datasets
-dataset_name="cifar10"
-dataset = datasets.get_dataset(dataset_name)
+
+from pytorch.experiment import models,rotation
+import pytorch_models
+
+import pytorch.experiment.utils as utils
+
+model_name,dataset_name=utils.parse_model_and_dataset("Experiment: accuracy of model for rotated vs unrotated dataset.")
+
+# dataset_name="cifar10"
+# model_name=pytorch_models.AllConvolutional.__name__
 
 verbose=False
-print(f"Training with dataset {dataset_name}.")
+dataset = datasets.get_dataset(dataset_name)
 if verbose:
+    print(f"Training with dataset {dataset_name}.")
     print(dataset.summary())
 
 # MODEL
-from pytorch.experiment import models,rotation
-import pytorch_models
-model_name=pytorch_models.AllConvolutional.__name__
+
 model, optimizer, rotated_model, rotated_optimizer = models.get_model(model_name,dataset,use_cuda)
 
 if verbose:
+    print(f"Training with model {model_name}.")
     print(model)
     print(rotated_model)
 

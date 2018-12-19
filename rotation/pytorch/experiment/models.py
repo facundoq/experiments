@@ -9,6 +9,12 @@ class ExperimentModel:
         self.parameters = parameters
         self.optimizer = optimizer
 
+def get_model_names():
+    return [pytorch_models.SimpleConv.__name__
+        ,pytorch_models.AllConv.__name__
+        ,pytorch_models.AllConvolutional.__name__
+        ,pytorch_models.VGGLike.__name__]
+
 def get_model(name,dataset,use_cuda):
     def setup_model(model,lr,wd):
         if use_cuda:
@@ -50,11 +56,10 @@ def get_model(name,dataset,use_cuda):
 
         return model, optimizer, rotated_model, rotated_optimizer
 
-
-    models={ pytorch_models.SimpleConv.__name__:simple_conv,
-             pytorch_models.AllConvolutional.__name__:all_convolutional,
-             pytorch_models.AllConv.__name__: all_conv,
-            }
+    models = {pytorch_models.SimpleConv.__name__: simple_conv,
+              pytorch_models.AllConvolutional.__name__: all_convolutional,
+              pytorch_models.AllConv.__name__: all_conv,
+              }
     return models[name]()
 
 def get_epochs(dataset,model):

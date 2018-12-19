@@ -1,3 +1,4 @@
+
 import matplotlib.pyplot as plt
 from pytorch.experiment.utils import RunningMeanAndVariance
 from collections import namedtuple
@@ -219,21 +220,34 @@ def pearson_outlier_range(values,iqr_away):
     range = (p50 - iqr_away * iqr, p50 + iqr_away * iqr)
     return range
 
+def outlier_range_all(std_list,iqr_away=5):
+    var_values=[np.hstack([np.hstack(class_stds) for class_stds in stds]) for stds in std_list]
+    var_values=np.hstack(var_values)
+    return outlier_range_values(var_values,iqr_away)
+
+    # minmaxs=[outlier_range(stds,iqr_away) for stds in std_list]
+    # mins,maxs=zip(*minmaxs)
+    # return max(mins),min(maxs)
+
 def outlier_range_both(rotated_stds,unrotated_stds,iqr_away=5):
     rmin,rmax=outlier_range(rotated_stds,iqr_away)
     umin,umax= outlier_range(unrotated_stds,iqr_away)
 
     return (max(rmin,umin),min(rmax,umax))
 
+def outlier_range_values(values,iqr_away):
+    pmin, pmax = pearson_outlier_range(values, iqr_away)
+    # if the pearson outlier range is away from the max and/or min, use max/or and min instead
+
+    finite_values=values[np.isfinite(values)]
+    # print(pmax, finite_values.max())
+    return (max(pmin, finite_values.min()), min(pmax, finite_values.max()))
+
 def outlier_range(stds,iqr_away):
     class_values=[np.hstack(class_stds) for class_stds in stds]
     values=np.hstack(class_values)
 
-    pmin,pmax=pearson_outlier_range(values,iqr_away)
-    # if the pearson outlier range is away from the max and/or min, use max/or and min instead
-    min_stds_all = min([min([std.min() for std in class_stds]) for class_stds in stds])
-    max_stds_all = max([max([std.max() for std in class_stds]) for class_stds in stds])
-    return ( max(pmin,min_stds_all),min(pmax,max_stds_all))
+    return outlier_range_values(values,iqr_away)
 
 def plot(all_stds,model,dataset_name,savefig=False,savefig_suffix="",class_names=None,vmax=None):
     vmin=0
@@ -248,28 +262,39 @@ def plot(all_stds,model,dataset_name,savefig=False,savefig_suffix="",class_names
                            dataset_name,savefig,
                            savefig_suffix)
 
-def plot_collapsing_layers(rotated_measures,measures,rotated_model,model,dataset_name,labels):
+def plot_collapsing_layers(rotated_measures,measures,labels,savefig=None, savefig_suffix=""):
     rotated_measures_collapsed=collapse_measure_layers(rotated_measures)
     measures_collapsed=collapse_measure_layers(measures)
     n=len(rotated_measures)
-    assert(n==len(measures))
+    assert( n == len(measures))
     assert (n == len(labels))
 
     color = plt.cm.hsv(np.linspace(0.1, 0.9, n))
 
 
-    f,ax=plt.subplots(dpi=min(300,n*15))
+    f,ax=plt.subplots(dpi=min(300,max(150,n*15)))
     for rotated_measure,measure,label,i in zip(rotated_measures_collapsed,measures_collapsed,labels,range(n)):
-        x=np.arange(rotated_measure.shape[0])
-        ax.plot(x,rotated_measure,label="rotated_"+label,linestyle="-",color=color[i,:])
-        ax.plot(np.arange(measure.shape[0]),measure,label="unrotated_"+label,linestyle="--",color=color[i,:])
+        x_rotated=np.arange(rotated_measure.shape[0])
+        x=np.arange(measure.shape[0])
+        ax.plot(x_rotated,rotated_measure,label="rotated_"+label,linestyle="-",color=color[i,:])
+        ax.plot(x,measure,label="unrotated_"+label,linestyle="--",color=color[i,:]*0.5)
+        # ax.set_ylim(max_measure)
 
     handles, labels = ax.get_legend_handles_labels()
 
     # reverse the order
-    ax.legend(handles[::-1], labels[::-1],bbox_to_anchor=(1.5, 1.05))
+    lgd=ax.legend(handles[::-1], labels[::-1],bbox_to_anchor=(1.3, 1))
+              # mode="expand", borderaxespad=0.3)
+    # ax.autoscale_view()
+    f.artists.append(lgd) # Here's the change
+    # plt.tight_layout()
+    if savefig:
+        image_name=f"collapsed_{savefig_suffix}.png"
+        path=os.path.join(savefig,image_name)
+        plt.savefig(path,bbox_inches="tight")
 
     plt.show()
+    plt.close()
 
 
 
@@ -278,42 +303,65 @@ def collapse_measure_layers(measures):
     return [np.array([np.mean(layer) for layer in measure]) for measure in measures]
 
 
+def run_all(model,rotated_model,dataset, config, n_rotations):
+    rotations = np.linspace(-180, 180, n_rotations, endpoint=False)
+
+    print("Calculating variance for all samples by class...")
+    rotated_var, rotated_stratified_layer_vars, classes = run(rotated_model, dataset, config, rotations)
+    var, stratified_layer_vars, classes = run(model, dataset, config, rotations)
+
+    # Plot variance for all
+    print("Calculating variance for all samples...")
+    rotated_var_all_dataset, classes = run_all_dataset(rotated_model, dataset, config,
+                                                       rotations)
+    var_all_dataset, classes = run_all_dataset(model, dataset, config, rotations)
+    return var,stratified_layer_vars,var_all_dataset,rotated_var,rotated_stratified_layer_vars,rotated_var_all_dataset
+
+def plot_all(model,rotated_model,dataset,results):
+
+    folderpath = os.path.join("plots", "var", f"{model.name}_{dataset.name}")
+    if not os.path.exists(folderpath):
+        os.makedirs(folderpath)
+    var, stratified_layer_vars, var_all_dataset, rotated_var, rotated_stratified_layer_vars, rotated_var_all_dataset=results
+    vmin, vmax = outlier_range_all(results,iqr_away=3)
+    vmin = vmin_all = vmin_class = 0
+    vmax_all = vmax_class = vmax
+    # vmin_class, vmax_class = outlier_range_both(rotated_var, var)
+    # vmin_class = 0
+    # vmin_class, vmax_class = outlier_range_both(rotated_stratified_layer_vars, stratified_layer_vars)
+    # vmin_class = 0
+    # vmin_all, vmax_all = outlier_range_both(rotated_var, var)
+
+    plot(rotated_var, model, dataset.name, savefig=folderpath,
+         savefig_suffix="rotated", vmax=vmax_class)
+    plot(var, model, dataset.name, savefig=folderpath, savefig_suffix="unrotated",
+         vmax=vmax_class)
+    plot(rotated_stratified_layer_vars, rotated_model, dataset.name,
+         class_names=["all_stratified"], savefig=folderpath,
+         savefig_suffix="rotated", vmax=vmax_class)
+    plot(stratified_layer_vars, model, dataset.name, class_names=["all_stratified"],
+         savefig=folderpath,savefig_suffix="unrotated",vmax=vmax_class)
+
+    plot(rotated_var_all_dataset, rotated_model, dataset.name,
+         savefig=folderpath, savefig_suffix="rotated", class_names=["all"], vmax=vmax_all)
+    plot(var_all_dataset, model, dataset.name,
+         savefig=folderpath, savefig_suffix="unrotated", class_names=["all"], vmax=vmax_all)
+
+
+    plot_collapsing_layers(rotated_var, var, dataset.labels
+                           , savefig=folderpath, savefig_suffix="classes")
+
+    # max_rotated = max([m.max() for m in rotated_measures_collapsed])
+    # max_unrotated = max([m.max() for m in measures_collapsed])
+    # max_measure = max([max_rotated, max_unrotated])
+
+    plot_collapsing_layers(rotated_stratified_layer_vars+rotated_var_all_dataset, stratified_layer_vars+var_all_dataset
+                            , ["stratified","all"], savefig=folderpath, savefig_suffix="global")
+
+    # plot_collapsing_layers(rotated_var_all_dataset, var_all_dataset,
+    #                        , savefig=folderpath, savefig_suffix="all")
+
+
 def run_and_plot_all(model,rotated_model,dataset, config, n_rotations = 16):
-        folderpath = os.path.join("plots", "var", f"{model.name}_{dataset.name}")
-        if not os.path.exists(folderpath):
-            os.makedirs(folderpath)
-
-        rotations = np.linspace(-180, 180, n_rotations, endpoint=False)
-
-        print("Calculating variance for all samples by class...")
-        rotated_var,rotated_stratified_layer_vars, classes = run(rotated_model, dataset, config, rotations)
-        var,stratified_layer_vars, classes = run(model, dataset, config, rotations)
-
-        vmin_class, vmax_class = outlier_range_both(rotated_var, var)
-        vmin_class = 0
-        plot(rotated_var, rotated_model, dataset.name, savefig=folderpath,
-                        savefig_suffix="rotated", vmax=vmax_class)
-        plot(var, model, dataset.name, savefig=folderpath, savefig_suffix="unrotated",
-                        vmax=vmax_class)
-
-        # vmin_all, vmax_all = outlier_range_both(rotated_var, var)
-        # vmin_all = 0
-
-        vmin_class, vmax_class = outlier_range_both(rotated_stratified_layer_vars, stratified_layer_vars)
-        vmin_class = 0
-        plot(rotated_stratified_layer_vars, rotated_model, dataset.name, class_names=["all_stratified"], savefig=folderpath,
-                        savefig_suffix="rotated", vmax=vmax_class)
-        plot(stratified_layer_vars, model, dataset.name, class_names=["all_stratified"], savefig=folderpath, savefig_suffix="unrotated",
-                        vmax=vmax_class)
-
-        # Plot variance for all
-        print("Calculating variance for all samples...")
-        rotated_var_all_dataset, classes = run_all_dataset(rotated_model, dataset, config,
-                                                                                     rotations)
-        var_all_dataset, classes = run_all_dataset(model, dataset, config, rotations)
-
-        vmin_all, vmax_all = outlier_range_both(rotated_var, var)
-        plot(rotated_var_all_dataset, rotated_model, dataset.name,
-                        savefig=folderpath, savefig_suffix="rotated", class_names=["all"], vmax=vmax_all)
-        plot(var_all_dataset, model, dataset.name,
-                        savefig=folderpath, savefig_suffix="unrotated", class_names=["all"], vmax=vmax_all)
+    results=run_all(model,rotated_model,dataset, config, n_rotations)
+    plot_all(model,rotated_model,dataset,results)
