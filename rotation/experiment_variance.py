@@ -36,7 +36,7 @@ if verbose:
 from pytorch.experiment import rotation
 model,rotated_model,scores,config=rotation.load_models(dataset,model_name,use_cuda)
 print(model.intermediates_names())
-raise ValueError()
+
 
 if verbose:
     print("### ", model)

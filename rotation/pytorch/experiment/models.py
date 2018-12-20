@@ -11,7 +11,7 @@ class ExperimentModel:
 
 def get_model_names():
     return [pytorch_models.SimpleConv.__name__
-        ,pytorch_models.AllConv.__name__
+        # ,pytorch_models.AllConv.__name__
         ,pytorch_models.AllConvolutional.__name__
         ,pytorch_models.VGGLike.__name__
         ,pytorch_models.ResNet.__name__]
@@ -40,20 +40,20 @@ def get_model(name,dataset,use_cuda):
         filters = {"mnist": 16, "mnist_rot": 32, "cifar10": 64, "fashion_mnist": 32, "lsa16": 16}
         model = pytorch_models.AllConvolutional(dataset.input_shape, dataset.num_classes,
                                                 filters=filters[dataset.name])
-        optimizer=setup_model(model,0.00001,1e-13)
+        optimizer=setup_model(model,1e-3,1e-13)
         rotated_model = pytorch_models.AllConvolutional(dataset.input_shape, dataset.num_classes,
                                                         filters=filters[dataset.name])
-        rotated_optimizer = setup_model(rotated_model, 0.00001, 1e-13)
+        rotated_optimizer = setup_model(rotated_model, 1e-3, 1e-13)
 
         return model, optimizer, rotated_model, rotated_optimizer
     def all_conv():
         filters = {"mnist": 16, "mnist_rot": 32, "cifar10": 64, "fashion_mnist": 32, "lsa16": 16}
         model = pytorch_models.AllConv(dataset.input_shape, dataset.num_classes,
                                                 filters=filters[dataset.name])
-        optimizer=setup_model(model,0.00001,1e-13)
+        optimizer=setup_model(model,1e-3,1e-13)
         rotated_model = pytorch_models.AllConvolutional(dataset.input_shape, dataset.num_classes,
                                                         filters=filters[dataset.name])
-        rotated_optimizer = setup_model(rotated_model, 0.00001, 1e-13)
+        rotated_optimizer = setup_model(rotated_model, 1e-3, 1e-13)
 
         return model, optimizer, rotated_model, rotated_optimizer
 
@@ -84,7 +84,7 @@ def get_model(name,dataset,use_cuda):
 
     models = {pytorch_models.SimpleConv.__name__: simple_conv,
               pytorch_models.AllConvolutional.__name__: all_convolutional,
-              pytorch_models.AllConv.__name__: all_conv,
+              # pytorch_models.AllConv.__name__: all_conv,
               pytorch_models.VGGLike.__name__: vgglike,
               pytorch_models.ResNet.__name__: resnet,
               }

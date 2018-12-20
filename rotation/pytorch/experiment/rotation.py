@@ -169,6 +169,8 @@ MODEL_SAVE_FILENAME="models.pt"
 
 def save_models(dataset,model,rotated_model,scores,config):
     model_folderpath = experiment_model_path(model.name, dataset.name)
+    homedir = os.path.expanduser("~")
+    model_folderpath = os.path.join(homedir,model_folderpath)
     if not os.path.exists(model_folderpath):
         os.makedirs(model_folderpath)
     filepath=os.path.join(model_folderpath,MODEL_SAVE_FILENAME)
@@ -181,6 +183,7 @@ from pytorch.experiment import models
 
 def load_models(dataset,model_name,use_cuda):
     models_state=load_models_state(dataset.name,model_name)
+
     model,optimizer,rotated_model,rotated_optimizer=models.get_model(model_name,dataset,use_cuda)
     model.load_state_dict(models_state["unrotated"])
     rotated_model.load_state_dict(models_state["rotated"])
@@ -190,7 +193,8 @@ def load_models(dataset,model_name,use_cuda):
 
 def load_models_state(dataset_name,model_name):
     model_folderpath = experiment_model_path(model_name, dataset_name)
-    model_filepath=os.path.join(model_folderpath,MODEL_SAVE_FILENAME)
+    homedir = os.path.expanduser("~")
+    model_filepath=os.path.join(homedir,model_folderpath,MODEL_SAVE_FILENAME)
     if not os.path.exists(model_filepath):
         message=f"The model |{model_name}| was not trained on dataset " \
                 f"|{dataset_name}| ({model_filepath} does not exist)." \

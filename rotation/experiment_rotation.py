@@ -24,10 +24,11 @@ else:
 
 
 
-verbose=False
+verbose=True
+
 dataset = datasets.get_dataset(dataset_name)
 if verbose:
-    print(f"Training with dataset {dataset_name}.")
+    print(f"Experimenting with dataset {dataset_name}.")
     print(dataset.summary())
 
 # MODEL
@@ -46,7 +47,8 @@ batch_size = 64
 epochs,rotated_epochs=models.get_epochs(dataset.name,model_name)
 config=rotation.TrainRotatedConfig(batch_size=batch_size,
                        epochs=epochs,rotated_epochs=rotated_epochs,
-                       pre_rotated_epochs=pre_rotated_epochs, optimizer=optimizer,rotated_optimizer=rotated_optimizer,
+                       pre_rotated_epochs=pre_rotated_epochs,
+                        optimizer=optimizer,rotated_optimizer=rotated_optimizer,
                       use_cuda=use_cuda)
 
 scores=rotation.run(config,model,rotated_model,dataset,plot_accuracy=True,save_plots=True)

@@ -46,7 +46,7 @@ class BasicBlock(nn.Module):
         outputs.append(out)
         out = F.relu(out)
         outputs.append(out)
-        return out
+        return out,outputs
     def n_intermediates(self):
         return len(self.intermediates_names())
     def intermediates_names(self):
@@ -154,31 +154,46 @@ class ResNet(nn.Module):
         outputs.append(x)
         x = F.relu(self.bn1(x))
         outputs.append(x)
+        # print(x.shape)
         x,intermediates = self.layer_intermediates(self.layer1,x)
         outputs+=intermediates
-        x,intermediates = self.layer_intermediates(self.layer1,x)
+        # print(x.shape)
+        x,intermediates = self.layer_intermediates(self.layer2,x)
         outputs += intermediates
-        x, intermediates = self.layer_intermediates(self.layer1,x)
+        # print(x.shape)
+        x, intermediates = self.layer_intermediates(self.layer3,x)
         outputs += intermediates
-        x, intermediates = self.layer_intermediates(self.layer1,x)
+        # print(x.shape)
+        x, intermediates = self.layer_intermediates(self.layer4,x)
         outputs += intermediates
+        # print(x.shape)
         x = F.avg_pool2d(x, 4)
+        # print(x.shape)
         outputs.append(x)
         x = x.view(x.size(0), -1)
+        # print(x.shape)
         x = self.linear(x)
         outputs.append(x)
         x = F.log_softmax(x, dim=1)
         outputs.append(x)
-        return x
+        return x,outputs
+    def layer_intermediates(self,layer,x):
+        outputs=[]
+        for block in layer:
+            x,intermediates=block.forward_intermediates(x)
+            outputs+=intermediates
+        # print(outputs)
+        return x,outputs
 
     def n_intermediates(self):
         return len(self.intermediates_names())
     def intermediates_names(self):
         names=["c0","c0act"]
         for i,l in enumerate([self.layer1,self.layer2,self.layer3,self.layer4]):
-            l_names=[f"l{i}_{n}" for n in l.intermediates_names()]
-            names.extend(l_names)
-        names+=["ap","fc0","fc0act"]
+            for j,block in enumerate(l):
+                l_names=[f"l{i}_b{j}_{n}" for n in block.intermediates_names()]
+                names.extend(l_names)
+        names+=["avgp","fc0","fc0act"]
         return names
 
 def ResNet18(input_shape,num_classes):
