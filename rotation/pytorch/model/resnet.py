@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from pytorch.model.util import SequentialWithIntermediates
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -21,12 +21,37 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
-        out = F.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
+        out = self.conv1(x)
+        out = F.relu(self.bn1(out))
+        out = self.conv2(out)
+        out = self.bn2(out)
         out += self.shortcut(x)
         out = F.relu(out)
         return out
 
+    def forward_intermediates(self,x):
+        outputs=[]
+        out=self.conv1(x)
+        outputs.append(out)
+        out = F.relu(self.bn1(out))
+        outputs.append(out)
+
+        out=self.conv2(out)
+        outputs.append(out)
+        out = self.bn2(out)
+
+        shortcut=self.shortcut(x)
+        outputs.append(shortcut)
+        out += self.shortcut(x)
+        outputs.append(out)
+        out = F.relu(out)
+        outputs.append(out)
+        return out
+    def n_intermediates(self):
+        return len(self.intermediates_names())
+    def intermediates_names(self):
+        names=["c0","c0act","c1","short","c1+short","act"]
+        return names
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -51,14 +76,47 @@ class Bottleneck(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
-        out += self.shortcut(x)
+        short = self.shortcut(x)
+        out+=short
         out = F.relu(out)
+
         return out
 
+    def forward_intermediates(self,x):
+        outputs=[]
+
+        out=self.conv1(x)
+        outputs.append(out)
+        out = F.relu(self.bn1())
+        outputs.append(out)
+
+        out=self.conv2(out)
+        outputs.append(out)
+        out = F.relu(self.bn2())
+        outputs.append(out)
+
+        out=self.conv3(out)
+        outputs.append(out)
+        out = self.bn3(out)
+
+        short = self.shortcut(x)
+        outputs.append(short)
+        out += short
+        outputs.append(out)
+        out = F.relu(out)
+        outputs.append(out)
+        return out,outputs
+
+    def n_intermediates(self):
+        return len(self.intermediates_names())
+    def intermediates_names(self):
+        names=["c0","c0act","c1","c1act","c2","short","c2+short","act"]
+        return names
 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks,input_shape,num_classes):
         super(ResNet, self).__init__()
+        self.name = self.__class__.__name__
         self.in_planes = 64
         h,w,c=input_shape
         self.conv1 = nn.Conv2d(c, 64, kernel_size=3, stride=1, padding=1, bias=False)
@@ -78,6 +136,7 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
+
         out = F.relu(self.bn1(self.conv1(x)))
         out = self.layer1(out)
         out = self.layer2(out)
@@ -85,10 +144,42 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        print(out.shape)
         out = self.linear(out)
+        out = F.log_softmax(out, dim=1)
         return out
 
+    def forward_intermediates(self,x):
+        outputs=[]
+        x = self.conv1(x)
+        outputs.append(x)
+        x = F.relu(self.bn1(x))
+        outputs.append(x)
+        x,intermediates = self.layer_intermediates(self.layer1,x)
+        outputs+=intermediates
+        x,intermediates = self.layer_intermediates(self.layer1,x)
+        outputs += intermediates
+        x, intermediates = self.layer_intermediates(self.layer1,x)
+        outputs += intermediates
+        x, intermediates = self.layer_intermediates(self.layer1,x)
+        outputs += intermediates
+        x = F.avg_pool2d(x, 4)
+        outputs.append(x)
+        x = x.view(x.size(0), -1)
+        x = self.linear(x)
+        outputs.append(x)
+        x = F.log_softmax(x, dim=1)
+        outputs.append(x)
+        return x
+
+    def n_intermediates(self):
+        return len(self.intermediates_names())
+    def intermediates_names(self):
+        names=["c0","c0act"]
+        for i,l in enumerate([self.layer1,self.layer2,self.layer3,self.layer4]):
+            l_names=[f"l{i}_{n}" for n in l.intermediates_names()]
+            names.extend(l_names)
+        names+=["ap","fc0","fc0act"]
+        return names
 
 def ResNet18(input_shape,num_classes):
     return ResNet(BasicBlock, [2,2,2,2],input_shape,num_classes)

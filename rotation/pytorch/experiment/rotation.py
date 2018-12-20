@@ -27,7 +27,7 @@ def run(config,model, rotated_model, dataset,
         print(f"### Skipping training model |{model.name}| with unrotated dataset |{dataset.name}|")
         history={}
     else:
-        print(f"### Training model |{model.name}| with unrotated dataset |{dataset.name}|...",flush=True)
+        print(f"### Training model |{model.name}| with unrotated dataset |{dataset.name}| for {config.epochs} epochs...",flush=True)
         history = train(model,config.epochs,config.optimizer,config.use_cuda,train_dataset,test_dataset,loss_function)
         if plot_accuracy:
             accuracy_plot_path =plot_history(history,"unrotated",model.name,dataset.name,save_plots)
@@ -36,7 +36,7 @@ def run(config,model, rotated_model, dataset,
     if config.pre_rotated_epochs == 0:
         print(f"### Skipping pretraining rotated model |{model.name}| with unrotated dataset |{dataset.name}|")
     else:
-        print(f"### Pretraining rotated model |{model.name}| with unrotated dataset |{dataset.name}|...",flush=True)
+        print(f"### Pretraining rotated model |{model.name}| with unrotated dataset |{dataset.name}|for {config.pre_rotated_epochs} epochs...",flush=True)
         pre_rotated_history = train(rotated_model, config.rotated_epochs, config.rotated_optimizer, config.use_cuda,
                                 train_dataset,test_dataset,loss_function)
         if plot_accuracy:
@@ -47,7 +47,7 @@ def run(config,model, rotated_model, dataset,
     if config.rotated_epochs == 0:
         print(f"### Skipping training of rotated model |{model.name}| with rotated dataset |{dataset.name}|")
     else:
-        print(f"### Training rotated model |{model.name}| with rotated dataset |{dataset.name}|...",flush=True)
+        print(f"### Training rotated model |{model.name}| with rotated dataset |{dataset.name}| for {config.rotated_epochs} epochs...",flush=True)
         rotated_history = train(rotated_model, config.rotated_epochs, config.rotated_optimizer, config.use_cuda,
                                 rotated_train_dataset,rotated_test_dataset,loss_function)
         if plot_accuracy:

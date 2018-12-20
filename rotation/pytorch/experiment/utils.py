@@ -39,7 +39,7 @@ class RunningMeanAndVariance:
         return np.sqrt(self.var())
 
 
-import argparse
+import argparse,argcomplete
 import pytorch.experiment.models as models
 import datasets
 
@@ -53,5 +53,7 @@ def parse_model_and_dataset(description):
     parser.add_argument('dataset', metavar='d',
                         help=f'Dataset to train/eval model. Allowed values: {", ".join(datasets.names)}'
                         ,choices=datasets.names)
+    argcomplete.autocomplete(parser)
+
     args = parser.parse_args()
     return args.model,args.dataset

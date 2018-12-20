@@ -4,6 +4,7 @@ from pytorch.model.gconv import *
 from pytorch.model.stn import *
 from pytorch.model.all_conv import *
 from pytorch.model.vgg_like import *
+from pytorch.model.resnet import *
 
 
 class FFNet(nn.Module):

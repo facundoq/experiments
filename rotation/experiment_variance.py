@@ -17,10 +17,11 @@ from pytorch import dataset as datasets
 import torch
 import pytorch.experiment.utils as utils
 
-model_name,dataset_name=utils.parse_model_and_dataset("Variance Experiment.")
-# model_name=pytorch_models.AllConv.__name__
-# model_name=pytorch_models.SimpleConv.__name__
-# dataset_name="mnist"
+if __name__ == "__main__":
+    model_name,dataset_name=utils.parse_model_and_dataset("Experiment: accuracy of model for rotated vs unrotated dataset.")
+else:
+    dataset_name="cifar10"
+    model_name=pytorch_models.AllConvolutional.__name__
 
 
 print(f"### Loading dataset {dataset_name} and model {model_name}....")
@@ -34,6 +35,9 @@ if verbose:
 
 from pytorch.experiment import rotation
 model,rotated_model,scores,config=rotation.load_models(dataset,model_name,use_cuda)
+print(model.intermediates_names())
+raise ValueError()
+
 if verbose:
     print("### ", model)
     print("### ", rotated_model)

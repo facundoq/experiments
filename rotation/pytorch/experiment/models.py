@@ -13,7 +13,8 @@ def get_model_names():
     return [pytorch_models.SimpleConv.__name__
         ,pytorch_models.AllConv.__name__
         ,pytorch_models.AllConvolutional.__name__
-        ,pytorch_models.VGGLike.__name__]
+        ,pytorch_models.VGGLike.__name__
+        ,pytorch_models.ResNet.__name__]
 
 def get_model(name,dataset,use_cuda):
     def setup_model(model,lr,wd):
@@ -56,10 +57,39 @@ def get_model(name,dataset,use_cuda):
 
         return model, optimizer, rotated_model, rotated_optimizer
 
+    def vgglike():
+        filters = {"mnist": 16, "mnist_rot": 32, "cifar10": 64, "fashion_mnist": 32, "lsa16": 16}
+        fc= {"mnist": 64, "mnist_rot": 64, "cifar10": 128, "fashion_mnist": 128, "lsa16": 64}
+        model = pytorch_models.VGGLike(dataset.input_shape, dataset.num_classes,
+                                                conv_filters=filters[dataset.name],fc=fc[dataset.name])
+        optimizer=setup_model(model,0.00001,1e-13)
+        rotated_model = pytorch_models.VGGLike(dataset.input_shape, dataset.num_classes,
+                                               conv_filters=filters[dataset.name],fc=fc[dataset.name])
+        rotated_optimizer = setup_model(rotated_model, 0.00001, 1e-13)
+
+        return model, optimizer, rotated_model, rotated_optimizer
+    def resnet():
+        resnet_version = {"mnist": pytorch_models.ResNet18,
+                          "mnist_rot": pytorch_models.ResNet18,
+                          "cifar10": pytorch_models.ResNet50,
+                          "fashion_mnist": pytorch_models.ResNet34,
+                          "lsa16": pytorch_models.ResNet34}
+
+        model = resnet_version[dataset.name](dataset.input_shape, dataset.num_classes)
+        optimizer=setup_model(model,0.00001,1e-13)
+        rotated_model = resnet_version[dataset.name](dataset.input_shape, dataset.num_classes)
+        rotated_optimizer = setup_model(rotated_model, 0.00001, 1e-13)
+
+        return model, optimizer, rotated_model, rotated_optimizer
+
     models = {pytorch_models.SimpleConv.__name__: simple_conv,
               pytorch_models.AllConvolutional.__name__: all_convolutional,
               pytorch_models.AllConv.__name__: all_conv,
+              pytorch_models.VGGLike.__name__: vgglike,
+              pytorch_models.ResNet.__name__: resnet,
               }
+    if name not in models:
+        raise ValueError(f"Model \"{name}\" does not exist. Choices: {', '.join(models.keys())}")
     return models[name]()
 
 def get_epochs(dataset,model):
@@ -74,6 +104,14 @@ def get_epochs(dataset,model):
         epochs={'cifar10':70,'mnist':15,'fashion_mnist':12,'cluttered_mnist':10,'lsa16':50,'mnist_rot':5,'pugeault':15}
         rotated_epochs={'cifar10':150,'mnist':50,'fashion_mnist':60,'cluttered_mnist':30,'lsa16':100,'mnist_rot':5,
                         'pugeault':40}
+    elif model==pytorch_models.VGGLike.__name__:
+        epochs={'cifar10':70,'mnist':15,'fashion_mnist':12,'cluttered_mnist':10,'lsa16':50,'mnist_rot':5,'pugeault':15}
+        rotated_epochs={'cifar10':150,'mnist':50,'fashion_mnist':60,'cluttered_mnist':30,'lsa16':100,'mnist_rot':5,
+                        'pugeault':40}
+    elif model==pytorch_models.ResNet.__name__:
+        epochs={'cifar10':70,'mnist':15,'fashion_mnist':12,'cluttered_mnist':10,'lsa16':50,'mnist_rot':5,'pugeault':15}
+        rotated_epochs={'cifar10':150,'mnist':50,'fashion_mnist':60,'cluttered_mnist':30,'lsa16':100,'mnist_rot':5,
+                        'pugeault':40}
     else:
-        raise ValueError(f"Invalid model name: {model}")
+        raise ValueError(f"Model \"{name}\" does not exist. Choices: {', '.join(get_model_names().keys())}")
     return epochs[dataset],rotated_epochs[dataset]
