@@ -333,9 +333,9 @@ def plot_all(model,rotated_model,dataset,results):
     # vmin_all, vmax_all = outlier_range_both(rotated_var, var)
 
     plot(rotated_var, model, dataset.name, savefig=folderpath,
-         savefig_suffix="rotated", vmax=vmax_class)
+         savefig_suffix="rotated", vmax=vmax_class,class_names=dataset.labels)
     plot(var, model, dataset.name, savefig=folderpath, savefig_suffix="unrotated",
-         vmax=vmax_class)
+         vmax=vmax_class,class_names=dataset.labels)
     plot(rotated_stratified_layer_vars, rotated_model, dataset.name,
          class_names=["all_stratified"], savefig=folderpath,
          savefig_suffix="rotated", vmax=vmax_class)

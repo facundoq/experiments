@@ -24,7 +24,7 @@ else:
 
 
 
-verbose=True
+verbose=False
 
 dataset = datasets.get_dataset(dataset_name)
 if verbose:

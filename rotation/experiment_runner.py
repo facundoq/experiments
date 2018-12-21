@@ -27,9 +27,9 @@ import datasets
 from pytorch.experiment import models
 
 model_names=models.get_model_names()
-model_names=["AllConv"]
+model_names=["AllConvolutional","SimpleConv","ResNet","VGGLike"]
 dataset_names=datasets.names
-dataset_names=["mnist","cifar10"]
+dataset_names=["mnist","cifar10","lsa16","fashion_mnist"]
 train=True
 experiments=["experiment_variance","experiment_accuracy_vs_rotation"]
 

@@ -1,5 +1,6 @@
 from keras.datasets import mnist,fashion_mnist,cifar10
 from data import lsa16,cluttered_mnist,pugeault,mnist_rot
+
 from keras import backend as K
 import keras
 import numpy as np
