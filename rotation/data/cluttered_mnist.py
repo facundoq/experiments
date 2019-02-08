@@ -4,7 +4,7 @@
 from . import util
 import numpy as np
 import os
-
+import logging
 
 # see https://github.com/skaae/recurrent-spatial-transformer-code/blob/master/MNIST_SEQUENCE/create_mnist_sequence.py
 # and https://github.com/MasazI/Spatial_Transformer_Network/blob/master/load_data.py
@@ -19,19 +19,20 @@ def load_data(path):
     foldername='cluttered-mnist'
     folderpath = os.path.join(path,foldername)
     if not os.path.exists(folderpath):
+        logging.warning(f"Creating folder {folderpath}...")
         os.mkdir(folderpath)
-    filename = 'cluttered-mnist-npz4'
+    filename = 'cluttered-mnist.npz'
     filepath = os.path.join(folderpath, filename)
     if not os.path.exists(filepath):
 #     origin = "https://github.com/skaae/recurrent-spatial-transformer-code/raw/master/mnist_sequence3_sample_8distortions_9x9.npz"
 #     origin = 'https://github.com/daviddao/spatial-transformer-tensorflow/raw/master/data/mnist_sequence1_sample_5distortions5x5.npz'
     
         origin="https://s3.amazonaws.com/lasagne/recipes/datasets/mnist_cluttered_60x60_6distortions.npz"
-        print(f"Downloading dataset to {filepath} from {origin}")
+        logging.warning(f"Downloading dataset to {filepath} from {origin}")
         util.download_file(origin, filepath)
 
-    path = "datasets/mnist_cluttered_60x60_6distortions.npz"
-    mnist_cluttered = np.load(path)
+
+    mnist_cluttered = np.load(filepath)
 
     x_train = mnist_cluttered['x_train']
     y_train = mnist_cluttered['y_train'].argmax(axis=-1)
@@ -51,4 +52,4 @@ def load_data(path):
     
     input_shape = 60,60,1
     labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    return (x_train, y_train), (x_test, y_test), (x_val, y_val), input_shape,labels
+    return (x_train, y_train), (x_test, y_test), input_shape,labels

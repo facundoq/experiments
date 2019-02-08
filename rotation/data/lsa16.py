@@ -1,15 +1,13 @@
-#from keras.utils.data_utils import get_file
-from . import util
 
+from . import util
+import logging
 import numpy as np
 import os
-#from scipy import ndimage
+
 from skimage import io
-from skimage import color
+
 from skimage import transform
 import zipfile
-
-from os.path import expanduser
 
 LSA16_w = 32
 LSA16_h = 32
@@ -37,7 +35,7 @@ def load_images(path_images):
             image = io.imread(os.path.join(path_images, filename))
 
             #image = color.rgb2gray(image)
-            image = transform.resize(image, (LSA16_w, LSA16_h),preserve_range=True)
+            image = transform.resize(image, (LSA16_w, LSA16_h),mode="reflect",preserve_range=True,anti_aliasing=True)
 
             x[i, :, :, :] = image
             # obtener label de la imagen, en base al primer dígito en el nombre de archivo
@@ -47,9 +45,10 @@ def load_images(path_images):
 
 def download_and_extract(version, folderpath,images_folderpath):
     if not os.path.exists(folderpath):
-        print("Creating folder %s..." % folderpath)
+        logging.warning(f"Creating folders {folderpath}  and {images_folderpath}")
         os.mkdir(folderpath)
         os.mkdir(images_folderpath)
+        print(images_folderpath)
 
     filename = version + ".zip"
     zip_filepath = os.path.join(folderpath, filename)
@@ -66,11 +65,8 @@ def download_and_extract(version, folderpath,images_folderpath):
 
 def load_data(path,version="lsa32x32_nr_rgb_black_background", test_subjects=[9]):
     path=os.path.join(path,f"lsa16_{version}")
-    if not os.path.exists(path):
-        print("Creating folder %s..." % path)
-        os.makedirs(path,exist_ok=True)
-
     images_folderpath=os.path.join(path,"images")
+
     # download dataset (if necessary)
     download_and_extract(version, path,images_folderpath)
     print("Loading images from %s" % images_folderpath)
@@ -87,7 +83,6 @@ def load_data(path,version="lsa32x32_nr_rgb_black_background", test_subjects=[9]
     y_train = y[train_indices]
 
     input_shape=(32,32,3)
-    labels = ["five", "four", "horns", "curve", "fingers together", "double", "hook", "index", "l", "flat hand",
-              "mitten",
-              "beak", "thumb", "fist", "telephone", "V"]
+    labels = ["five", "four", "horns", "curve", "fingers together", "double", "hook", "index", "l", "flat hand","mitten", "beak", "thumb", "fist", "telephone", "V"]
+
     return x_train, x_test, y_train, y_test, input_shape,labels

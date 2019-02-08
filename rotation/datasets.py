@@ -19,11 +19,7 @@ def get_data(dataset="mnist",dataformat="NHWC",path=os.path.expanduser("~/.datas
     elif dataset == "mnist_rot":
         x_train, x_test,y_train, y_test, input_shape,labels = mnist_rot.load_data(path)
     elif dataset=="cluttered_mnist":
-        (x_train, y_train), (x_test, y_test), (x_val, y_val),img_channels,img_rows, img_cols = cluttered_mnist.load_data(path)
-        x_train, x_test = np.expand_dims(x_train, axis=3), np.expand_dims(x_test, axis=3)
-        x_val= np.expand_dims(x_val, axis=3)
-        labels=["0","1","2","3","4","5","6","7","8","9"]
-        num_classes = 10
+        (x_train, y_train), (x_test, y_test), input_shape, labels= cluttered_mnist.load_data(path)
     elif dataset== "lsa16":
         x_train, x_test, y_train, y_test,input_shape,labels \
             = lsa16.load_data(path,version="lsa32x32_nr_rgb_black_background",test_subjects=[9])

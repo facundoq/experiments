@@ -2,17 +2,11 @@ import numpy as np
 import os
 
 import zipfile
-import requests
-import shutil
-import util
 
-from os.path import expanduser
-
+from . import util
+import logging
 from skimage import io
-from skimage import color
 from skimage import transform
-
-import tarfile
 
 filenames=["Person%d.zip" % i for i in range(1,7)]
 
@@ -112,7 +106,7 @@ def load_images(images_folderpath):
             print(i/n*100,"%")
     return x, y, subject
 
-from multiprocessing import Pool
+
 
 def list_diff(a,b):
     s = set(b)
@@ -121,22 +115,22 @@ def list_diff(a,b):
 
 def download_and_extract(folderpath,images_folderpath):
     if not os.path.exists(folderpath):
-        print("Creating folder %s..." % folderpath)
+        logging.warning("Creating folder %s..." % folderpath)
         os.mkdir(folderpath)
-        print("Creating folder %s..." % images_folderpath)
+        logging.warning("Creating folder %s..." % images_folderpath)
         os.mkdir(images_folderpath)
 
-    print("Downloading Irish Sign Language dataset to folder %s ..." % folderpath)
+        logging.warning("Downloading Irish Sign Language dataset to folder %s ..." % folderpath)
     for filename in filenames:
         zip_filepath = os.path.join(folderpath, filename)
 
         if not os.path.exists(zip_filepath):
             origin = url +filename+"?raw=true"
-            print("Downloading: %s ..." % origin)
+            logging.warning("Downloading: %s ..." % origin)
             util.download_file(origin,zip_filepath)
 
             with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
-                print("Extracting images to %s..." % images_folderpath)
+                logging.warning("Extracting images to %s..." % images_folderpath)
                 zip_ref.extractall(images_folderpath)
 
 #
@@ -167,8 +161,7 @@ def split_data(x,y,subject,test_subjects):
 # the test set and the rest to the train set.
 # A list of numbers from 1 to 6: for a subject independent experiment where
 # the list contains the subjects whose images form the test set.
-def load_data(test_subjects=[6],folderpath=os.path.join(expanduser("~"),".keras",
-                                                                                     "datasets","irish")):
+def load_data(folderpath,test_subjects=[6]):
 
     images_folderpath = os.path.join(folderpath, "images")
     np_filename="irish.npz"
@@ -176,7 +169,7 @@ def load_data(test_subjects=[6],folderpath=os.path.join(expanduser("~"),".keras"
     if not os.path.exists(np_filepath):
         print("Could not find ",np_filename,". Downloading/extracting/reencoding dataset...")
         # download dataset (if necessary)
-        #download_and_extract(folderpath,images_folderpath)
+        download_and_extract(folderpath,images_folderpath)
         print("Loading images from %s..." % images_folderpath)
         x,y,subject = load_images(images_folderpath)
         print("Done.")

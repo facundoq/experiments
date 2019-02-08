@@ -1,6 +1,6 @@
 import datasets
 
-dataset="mnist"
+dataset="pugeault"
 (x_train, y_train), (x_test, y_test), input_shape,num_classes,labels= datasets.get_data(dataset)
 
 print(f"Images shape {input_shape}")
@@ -30,7 +30,7 @@ for i in range(samples):
     col=i % grid_cols
     ax=axes[row,col]
     if input_shape[2]==1:
-        ax.imshow(x_train[i_sample,:,:,0])
+        ax.imshow(x_train[i_sample,:,:,0], cmap='gray')
     else:
         ax.imshow(x_train[i_sample, :, :,:])
     ax.get_xaxis().set_visible(False)
