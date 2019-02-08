@@ -4,11 +4,7 @@ import os
 import zipfile
 import requests
 import shutil
-
-def download_file(url,filepath):
-    with requests.get(url, stream=True) as r:
-        with open(filepath, 'wb') as f:
-            shutil.copyfileobj(r.raw, f)
+import util
 
 from os.path import expanduser
 
@@ -137,7 +133,7 @@ def download_and_extract(folderpath,images_folderpath):
         if not os.path.exists(zip_filepath):
             origin = url +filename+"?raw=true"
             print("Downloading: %s ..." % origin)
-            download_file(origin,zip_filepath)
+            util.download_file(origin,zip_filepath)
 
             with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
                 print("Extracting images to %s..." % images_folderpath)

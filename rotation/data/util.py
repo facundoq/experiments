@@ -22,9 +22,6 @@ from six.moves.urllib.error import HTTPError
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen
 
-
-
-
 def get_file(fname,
              origin,
              untar=False,

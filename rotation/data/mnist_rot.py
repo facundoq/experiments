@@ -1,4 +1,3 @@
-from keras.utils.data_utils import get_file
 import numpy as np
 import os
 #from scipy import ndimage
@@ -6,7 +5,7 @@ from skimage import io
 from skimage import color
 from skimage import transform
 import zipfile
-
+from . import util
 from os.path import expanduser
 
 
@@ -27,6 +26,7 @@ def load_images(folderpath):
     y_test  = test['labels']
     # print(x_train.shape,y_train.shape,x_test.shape,y_test.shape)
     # print(x_train.dtype, y_train.dtype, x_test.dtype, y_test.dtype)
+    labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
     return x_train,x_test,y_train,y_test
 
 def encode_images(folderpath):
@@ -54,35 +54,26 @@ def encode_images(folderpath):
 
 
 def download_and_extract(folderpath):
-    if not os.path.exists(folderpath):
-        print("Creating folder %s..." % folderpath)
-        os.mkdir(folderpath)
-
     filename = "mnist_rotation_new.zip"
     zip_filepath = os.path.join(folderpath, filename)
     if not os.path.exists(zip_filepath):
         print("Downloading mnist rot to %s ..." % zip_filepath)
         origin = "http://www.iro.umontreal.ca/~lisa/icml2007data/mnist_rotation_new.zip"
-        get_file(zip_filepath, origin=origin)
+        util.download_file(origin,zip_filepath)
         print("Extracting dataset matrices..." )
         with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
             zip_ref.extractall(folderpath)
             encode_images(folderpath)
 
 
-def load_data(folderpath=os.path.join(expanduser("~"),".keras","datasets","mnist_rot")):
-
+def load_data(folderpath):
+    folderpath=os.path.join(folderpath,"mnist_rot")
     if not os.path.exists(folderpath):
-        print("Creating folder %s..." % folderpath)
-        os.makedirs(folderpath,exist_ok=True)
-    # get folder where the dataset is / will be downloaded
-    download_and_extract(folderpath)
-    print("Loading images from %s" % folderpath)
-
-    #encode_images(folderpath)
-
+        os.mkdir(folderpath)
+        download_and_extract(folderpath)
+        encode_images(folderpath)
     x_train,x_test,y_train,y_test=load_images(folderpath)
-    print(x_train.shape,y_train.shape,x_test.shape,y_test.shape)
 
-    img_channels, img_rows, img_cols = 1, 28,28
-    return x_train, x_test, y_train, y_test, img_channels, img_rows, img_cols
+    labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    input_shape = x_train.shape[1:]
+    return x_train, x_test, y_train, y_test, input_shape, labels

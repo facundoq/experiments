@@ -1,10 +1,10 @@
 import numpy as np
 import os
-from keras.utils.data_utils import get_file
+
 from os.path import expanduser
+from . import util
 
 from skimage import io
-from skimage import color
 from skimage import transform
 
 import tarfile
@@ -14,23 +14,22 @@ import tarfile
 def load_subject(subject_path,image_size,skip):
     
     folders= sorted(os.listdir(subject_path))
-    # definir variables vacías, luego crecen
     data= np.zeros((0,image_size[0],image_size[1], 3),dtype='uint8')
     labels= np.array(())
     
     # cargar cada folder con sus labels
     for (i, folderName) in enumerate(folders):
-        label_i= ord(folderName) - 97  # convierte el caracter en un índice de A=0 en adelante
+        label_i= ord(folderName) - 97
         files= sorted(os.listdir(os.path.join(subject_path,folderName)))
         files = [f for f in files if f.startswith("color")]
         files=files[::skip]
-        # por cada archivo dentro del folder
+
         folder_data=np.zeros((len(files), image_size[0], image_size[1], 3),dtype='uint8')
         for (j, filename) in enumerate(files):
             image_filepath=os.path.join(subject_path, folderName,filename)
             image=io.imread(image_filepath)
             image = transform.resize(image, (image_size[0], image_size[1]), preserve_range=True)
-            # actualizar matriz de datos y de labels
+
             labels= np.append(labels, label_i)
             folder_data[j,:,:,:]=image
         data= np.vstack((data, folder_data))
@@ -43,12 +42,9 @@ def list_diff(a,b):
     return [x for x in a if x not in s]
 
 def load_images(folder_path,image_size,skip,test_subjects):
-    # se considera datos para training los sujetos A, B, C, D
-    # y datos para testing al sujeto E
 
-    # cargar sujetos train y test
     train_subjects=list_diff(["A","B","C","D","E"],test_subjects)
-    # p = Pool(len(subjects))
+
 
     def f(subject): return load_subject(os.path.join(folder_path,subject),image_size,skip)
 
@@ -77,7 +73,8 @@ def download_and_extract(folderpath):
     if not os.path.exists(zip_filepath):
         print("Downloading Pugeault's Fingerspelling dataset to folder %s ..." % zip_filepath)
         origin = "http://www.cvssp.org/FingerSpellingKinect2011/fingerspelling5.tar.bz2"
-        get_file(zip_filepath, origin=origin)
+
+        util.download_file(origin, zip_filepath)
 
     if len(os.listdir(folderpath))==1:
         print("Extracting images to %s..." % folderpath)
@@ -107,6 +104,11 @@ def load_data(image_size=(32,32),skip=1,test_subjects=["E"],folderpath=os.path.j
         print("Found binary version in %s, loading..." % np_filepath)
         data=np.load(np_filepath)
         x_train, x_test, y_train, y_test=(data["x_train"],data["x_test"],data["y_train"],data["y_test"])
-    img_channels, img_rows, img_cols =3, 32, 32
-    return x_train, x_test, y_train, y_test, img_channels, img_rows, img_cols
+
+
+    input_shape=(32,32,3)
+    import string
+    labels = string.ascii_lowercase[:25]
+    num_classes=len(labels)
+    return x_train, x_test, y_train, y_test, input_shapee
 

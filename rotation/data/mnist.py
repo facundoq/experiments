@@ -1,14 +1,13 @@
 """MNIST handwritten digits dataset.
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
-from ..utils.data_utils import get_file
+from . import util
+
 import numpy as np
+import os
+import logging
 
-
-def load_data(path='mnist.npz'):
+def load_data(path):
     """Loads the MNIST dataset.
 
     # Arguments
@@ -18,11 +17,21 @@ def load_data(path='mnist.npz'):
     # Returns
         Tuple of Numpy arrays: `(x_train, y_train), (x_test, y_test)`.
     """
-    path = get_file(path,
-                    origin='https://s3.amazonaws.com/img-datasets/mnist.npz',
-                    file_hash='8a61469f7ea1b51cbae51d4f78837e45')
-    f = np.load(path)
+    filename='mnist.npz'
+    filepath=os.path.join(path,filename)
+    url="https://s3.amazonaws.com/img-datasets/mnist.npz"
+    if not os.path.exists(filepath):
+        logging.warning(f"Downloading mnist from {url} to {filepath}")
+        util.download_file(url,filepath)
+
+    f = np.load(filepath)
     x_train, y_train = f['x_train'], f['y_train']
     x_test, y_test = f['x_test'], f['y_test']
     f.close()
-    return (x_train, y_train), (x_test, y_test)
+
+    x_train, x_test = np.expand_dims(x_train, axis=3), np.expand_dims(x_test, axis=3)
+    input_shape=(28,28,1)
+    labels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    return (x_train, y_train), (x_test, y_test), input_shape, labels
+
+

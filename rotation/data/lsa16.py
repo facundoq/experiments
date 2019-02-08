@@ -1,4 +1,6 @@
-from keras.utils.data_utils import get_file
+#from keras.utils.data_utils import get_file
+from . import util
+
 import numpy as np
 import os
 #from scipy import ndimage
@@ -55,23 +57,22 @@ def download_and_extract(version, folderpath,images_folderpath):
         print("Downloading lsa16 version=%s to folder %s ..." % (version, zip_filepath))
         base_url = "http://facundoq.github.io/unlp/lsa16/data/"
         origin = base_url + filename
-        get_file(zip_filepath, origin=origin)
+        util.download_file(origin, zip_filepath)
     if not os.listdir(images_folderpath):
         print("Extracting images..." )
         with zipfile.ZipFile(zip_filepath, "r") as zip_ref:
             zip_ref.extractall(images_folderpath)
 
 
-def load_data(version="lsa32x32_nr_rgb_black_background", test_subjects=[9],folderpath=os.path.join(expanduser("~"),".keras",
-                                                                                     "datasets","lsa16")):
-    if not os.path.exists(folderpath):
-        print("Creating folder %s..." % folderpath)
-        os.makedirs(folderpath,exist_ok=True)
-    # get folder where the dataset is / will be downloaded
-    folderpath = os.path.join(folderpath, version)
-    images_folderpath=os.path.join(folderpath,"images")
+def load_data(path,version="lsa32x32_nr_rgb_black_background", test_subjects=[9]):
+    path=os.path.join(path,f"lsa16_{version}")
+    if not os.path.exists(path):
+        print("Creating folder %s..." % path)
+        os.makedirs(path,exist_ok=True)
+
+    images_folderpath=os.path.join(path,"images")
     # download dataset (if necessary)
-    download_and_extract(version, folderpath,images_folderpath)
+    download_and_extract(version, path,images_folderpath)
     print("Loading images from %s" % images_folderpath)
 
     # load images
@@ -85,5 +86,8 @@ def load_data(version="lsa32x32_nr_rgb_black_background", test_subjects=[9],fold
     x_train = x[train_indices, :, :, :]
     y_train = y[train_indices]
 
-    img_channels, img_rows, img_cols = 3, 32, 32
-    return x_train, x_test, y_train, y_test, img_channels, img_rows, img_cols
+    input_shape=(32,32,3)
+    labels = ["five", "four", "horns", "curve", "fingers together", "double", "hook", "index", "l", "flat hand",
+              "mitten",
+              "beak", "thumb", "fist", "telephone", "V"]
+    return x_train, x_test, y_train, y_test, input_shape,labels
