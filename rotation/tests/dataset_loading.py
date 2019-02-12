@@ -1,6 +1,6 @@
 import datasets
 
-dataset="pugeault"
+dataset="irish"
 (x_train, y_train), (x_test, y_test), input_shape,num_classes,labels= datasets.get_data(dataset)
 
 print(f"Images shape {input_shape}")
@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 initial_sample=0
 samples=64
+skip= y_train.shape[0] // samples
 
 grid_cols=8
 grid_rows=samples // grid_cols
@@ -24,7 +25,7 @@ for axr in axes:
         ax.get_yaxis().set_visible(False)
 
 for i in range(samples):
-    i_sample=i+initial_sample
+    i_sample=i*skip+initial_sample
     klass = y_train[i_sample].argmax()
     row=i // grid_cols
     col=i % grid_cols

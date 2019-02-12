@@ -73,20 +73,25 @@ def download_and_extract(folderpath):
     if not os.path.exists(zip_filepath):
         logging.warning("Downloading Pugeault's Fingerspelling dataset to folder %s ..." % zip_filepath)
         origin = "http://www.cvssp.org/FingerSpellingKinect2011/fingerspelling5.tar.bz2"
-
         util.download_file(origin, zip_filepath)
 
-    if len(os.listdir(folderpath))==1:
+    if not os.path.exists(os.path.join(folderpath,"dataset5")):
         logging.warning("Extracting images to %s..." % folderpath)
         with tarfile.open(zip_filepath, "r:bz2") as tar_ref:
             tar_ref.extractall(folderpath)
 
 
 def load_data(folderpath,image_size=(32,32),skip=1,test_subjects=["E"]):
-    # get folder where the dataset is / will be downloaded
-    # folderpath = os.path.join(tempfile.gettempdir(), "pugeault")
+    folderpath = os.path.join(folderpath, "pugeault")
+    # make folder for pugeault
+    if not os.path.exists(folderpath):
+        os.mkdir(folderpath)
+    # make folder for options
+    dataset_options="subjects"+"".join(test_subjects)+f"_skip{skip}_size{image_size[0]}x{image_size[1]}"
+
+    #download dataset
     test_subjects_string="".join(test_subjects)
-    np_filename="pugeault_skip%d_testsubjects%s_color.npz" %(skip,test_subjects_string)
+    np_filename=f"pugeault_color_{dataset_options}.npz"
     np_filepath=os.path.join(folderpath,np_filename)
     if not os.path.exists(np_filepath):
         logging.warning("Downloading/extracting/recoding dataset...")
@@ -100,7 +105,7 @@ def load_data(folderpath,image_size=(32,32),skip=1,test_subjects=["E"]):
         np.savez(np_filepath, x_train=x_train, x_test=x_test, y_train=y_train, y_test=y_test)
         logging.warning("Done.")
     else:
-        logging.info("Found binary version in %s, loading..." % np_filepath)
+        logging.warning(f"Found binary version of pugeault's dataset in {np_filepath}, loading...")
         data=np.load(np_filepath)
         x_train, x_test, y_train, y_test=(data["x_train"],data["x_test"],data["y_train"],data["y_test"])
 

@@ -17,6 +17,10 @@ def load_data(path):
     # Returns
         Tuple of Numpy arrays: `(x_train, y_train), (x_test, y_test)`.
     """
+    path=os.path.join(path,"mnist")
+    if not os.path.exists(path):
+        os.mkdir(path)
+
     filename='mnist.npz'
     filepath=os.path.join(path,filename)
     url="https://s3.amazonaws.com/img-datasets/mnist.npz"

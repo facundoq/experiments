@@ -1,5 +1,5 @@
 
-from data import lsa16,cluttered_mnist,pugeault,mnist_rot,mnist,fashion_mnist,cifar10
+from data import lsa16,cluttered_mnist,pugeault,mnist_rot,mnist,fashion_mnist,cifar10,irish
 
 
 import numpy as np
@@ -25,6 +25,8 @@ def get_data(dataset="mnist",dataformat="NHWC",path=os.path.expanduser("~/.datas
             = lsa16.load_data(path,version="lsa32x32_nr_rgb_black_background",test_subjects=[9])
     elif dataset == "pugeault":
         x_train, x_test, y_train, y_test, input_shape,labels = pugeault.load_data(path)
+    elif dataset == "irish":
+        x_train, x_test, y_train, y_test, input_shape, labels = irish.load_data(path)
     else:
         raise ValueError("Unknown dataset: %s" % dataset)
 
