@@ -1,8 +1,6 @@
 from keras import layers
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Conv2D, MaxPooling2D,Activation,Input,GlobalAveragePooling2D
-from layers import SpatialTransformer,GConv2D
+from keras.layers import Activation,Input,GlobalAveragePooling2D
+from keras.layers import SpatialTransformer,GConv2D
 import numpy as np
 
 def simple_conv(input_shape,num_classes,filters=96,frozen_layers=[]):
@@ -235,7 +233,7 @@ def batchrelu(y):
 from keras import layers
 import keras
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Dense, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import BatchNormalization
 

@@ -40,7 +40,7 @@ class RunningMeanAndVariance:
 
 
 import argparse,argcomplete
-import pytorch.experiment.models as models
+import pytorch.experiment.model_loading as models
 import datasets
 
 def parse_model_and_dataset(description):

@@ -10,9 +10,6 @@ plt.rcParams['image.cmap'] = 'gray'
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
-
-
-import pytorch_models
 from pytorch import dataset as datasets
 import torch
 import pytorch.experiment.utils as utils

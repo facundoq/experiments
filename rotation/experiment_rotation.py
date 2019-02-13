@@ -9,10 +9,9 @@ import torch
 use_cuda=torch.cuda.is_available()
 
 # DATASET
-from pytorch import dataset as datasets
+from pytorch import dataset as datasets, models
 
-from pytorch.experiment import models,rotation
-import pytorch_models
+from pytorch.experiment import model_loading,rotation
 
 import pytorch.experiment.utils as utils
 
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     model_name,dataset_name=utils.parse_model_and_dataset("Experiment: accuracy of model for rotated vs unrotated dataset.")
 else:
     dataset_name="cifar10"
-    model_name=pytorch_models.AllConvolutional.__name__
+    model_name= models.AllConvolutional.__name__
 
 
 
@@ -33,7 +32,7 @@ if verbose:
 
 # MODEL
 
-model, optimizer, rotated_model, rotated_optimizer = models.get_model(model_name,dataset,use_cuda)
+model, optimizer, rotated_model, rotated_optimizer = model_loading.get_model(model_name, dataset, use_cuda)
 
 
 if verbose:
@@ -44,7 +43,7 @@ if verbose:
 # TRAINING
 pre_rotated_epochs=0
 batch_size = 64
-epochs,rotated_epochs=models.get_epochs(dataset.name,model_name)
+epochs,rotated_epochs=model_loading.get_epochs(dataset.name, model_name)
 config=rotation.TrainRotatedConfig(batch_size=batch_size,
                        epochs=epochs,rotated_epochs=rotated_epochs,
                        pre_rotated_epochs=pre_rotated_epochs,

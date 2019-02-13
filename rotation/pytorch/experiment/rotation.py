@@ -179,12 +179,12 @@ def save_models(dataset,model,rotated_model,scores,config):
                 "scores":scores,
                 "config":config,
     }, filepath)
-from pytorch.experiment import models
+from pytorch.experiment import model_loading
 
 def load_models(dataset,model_name,use_cuda):
     models_state=load_models_state(dataset.name,model_name)
 
-    model,optimizer,rotated_model,rotated_optimizer=models.get_model(model_name,dataset,use_cuda)
+    model,optimizer,rotated_model,rotated_optimizer=model_loading.get_model(model_name, dataset, use_cuda)
     model.load_state_dict(models_state["unrotated"])
     rotated_model.load_state_dict(models_state["rotated"])
     model.eval()

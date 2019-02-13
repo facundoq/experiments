@@ -10,10 +10,7 @@ plt.rcParams['image.cmap'] = 'gray'
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
-
-
-import pytorch_models
-from pytorch import dataset as datasets
+from pytorch import dataset as datasets, models
 import torch
 import pytorch.experiment.utils as utils
 
@@ -21,7 +18,7 @@ if __name__ == "__main__":
     model_name,dataset_name=utils.parse_model_and_dataset("Experiment: accuracy of model for rotated vs unrotated dataset.")
 else:
     dataset_name="cifar10"
-    model_name=pytorch_models.AllConvolutional.__name__
+    model_name= models.AllConvolutional.__name__
 
 
 print(f"### Loading dataset {dataset_name} and model {model_name}....")

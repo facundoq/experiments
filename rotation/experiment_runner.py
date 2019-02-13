@@ -24,12 +24,12 @@ def run_experiment(experiment, model_name, dataset_name):
 # DATASET
 import datasets
 
-from pytorch.experiment import models
+from pytorch.experiment import model_loading
 
-model_names=models.get_model_names()
+model_names=model_loading.get_model_names()
 model_names=["AllConvolutional","SimpleConv","ResNet","VGGLike"]
 dataset_names=datasets.names
-dataset_names=["mnist","cifar10","lsa16","fashion_mnist"]
+dataset_names=["mnist","cifar10"]
 train=True
 experiments=["experiment_variance","experiment_accuracy_vs_rotation"]
 
