@@ -56,7 +56,6 @@ def load_images(folder_path,image_size):
     x = np.vstack(xs)
     y = np.hstack(ys)
     subject=np.hstack(subject)
-
     return x,y,subject
 
 
