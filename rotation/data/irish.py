@@ -80,12 +80,16 @@ def preprocess_image(image,pad,image_size):
     image=image.astype(original_type)
     return image
 
+dataset_images=58114
+
 def load_images(images_folderpath,image_size):
     
     files=os.listdir(images_folderpath)
     n=len(files)
     logging.warning("Loading ",n," images..")
-    assert(n==58114,"Wrong number of images, please delete files and repeat the download and extraction process.")
+    if n!=dataset_images:
+        logging.warning(f"Wrong number of images, please delete files and repeat the download and extraction process (expected {dataset_images}, got {n}).")
+
     x= np.zeros((n,image_size[0],image_size[1],1),dtype='uint8')
     y= np.zeros(n)
     subject=np.zeros(n)
@@ -135,26 +139,6 @@ def download_and_extract(folderpath,images_folderpath):
                 zip_ref.extractall(images_folderpath)
 
 #
-def split_data(x,y,subject,test_subjects):
-    if test_subjects=="subject_dependent":
-        x_test=x[::2,:,:,:]
-        x_train = x[1::2, :, :, :]
-        y_test=y[::2]
-        y_train= y[1::2]
-        subject_test=subject[::2]
-        subject_train = subject[1::2]
-    else:
-        test_subjects=np.array(test_subjects)
-        test_indices=np.isin(subject,test_subjects)
-        train_indices=np.logical_not(test_indices)
-        x_train=x[train_indices,:,:,:]
-        x_test=x[test_indices,:,:,:]
-        y_train=y[train_indices]
-        y_test=y[test_indices]
-        subject_train=subject[train_indices]
-        subject_test=subject[test_indices]
-
-    return x_train, x_test, y_train, y_test, subject_train,subject_test
 
 # test_subjects can be either:
 # the string "subject_dependent": for a subject dependent split where
@@ -167,8 +151,8 @@ def load_data(folderpath,test_subjects=[6],image_size=(64,64)):
     if not os.path.exists(folderpath):
         os.mkdir(folderpath)
     images_folderpath = os.path.join(folderpath, "images")
-    version="_".join(map(str,test_subjects))+f"size_{image_size[0]}_{image_size[1]}"
-    np_filename=f"irish_subjects{version}.npz"
+    version=f"size_{image_size[0]}_{image_size[1]}"
+    np_filename=f"irish_{version}.npz"
     np_filepath = os.path.join(folderpath, np_filename)
     if not os.path.exists(np_filepath):
         logging.warning(f"Could not find {np_filename}. Downloading/extracting/reencoding dataset...")
@@ -184,8 +168,8 @@ def load_data(folderpath,test_subjects=[6],image_size=(64,64)):
         data=np.load(np_filepath)
         x,y,subject = data["x"],data["y"],data["subject"]
 
-    x_train, x_test, y_train, y_test,subject_train,subject_test=split_data(x,y,subject,test_subjects)
-    input_shape=[image_size[0], image_size[1],3]
+    x_train, x_test, y_train, y_test,subject_train,subject_test=util.split_data(x,y,subject,test_subjects)
+    input_shape=[image_size[0], image_size[1],1]
     labels = list(string.ascii_lowercase)
 
     return x_train, x_test, y_train, y_test, input_shape,labels

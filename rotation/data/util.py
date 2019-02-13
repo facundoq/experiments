@@ -7,9 +7,6 @@ def download_file(url,filepath):
 
 
 
-
-
-
 from abc import ABC,abstractmethod
 from urllib.parse import urlparse
 import requests
@@ -83,3 +80,26 @@ class DatasetLoader(ABC):
         with requests.get(url, stream=True) as r:
             with open(filepath, 'wb') as f:
                 shutil.copyfileobj(r.raw, f)
+
+
+import numpy as np
+def split_data(x,y,subject,test_subjects):
+    if test_subjects=="subject_dependent":
+        x_test=x[::2,:,:,:]
+        x_train = x[1::2, :, :, :]
+        y_test=y[::2]
+        y_train= y[1::2]
+        subject_test=subject[::2]
+        subject_train = subject[1::2]
+    else:
+        test_subjects=np.array(test_subjects)
+        test_indices=np.isin(subject,test_subjects)
+        train_indices=np.logical_not(test_indices)
+        x_train=x[train_indices,:,:,:]
+        x_test=x[test_indices,:,:,:]
+        y_train=y[train_indices]
+        y_test=y[test_indices]
+        subject_train=subject[train_indices]
+        subject_test=subject[test_indices]
+
+    return x_train, x_test, y_train, y_test, subject_train,subject_test

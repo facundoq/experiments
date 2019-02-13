@@ -1,6 +1,6 @@
 import datasets
 
-dataset="irish"
+dataset="pugeault"
 (x_train, y_train), (x_test, y_test), input_shape,num_classes,labels= datasets.get_data(dataset)
 
 print(f"Images shape {input_shape}")
@@ -8,7 +8,7 @@ print(f"classes {num_classes}, labels:\n {labels}")
 print(f"Train samples: {y_train.shape[0]}, Test samples: {y_test.shape[0]}")
 
 import matplotlib.pyplot as plt
-
+print(x_train.shape)
 initial_sample=0
 samples=64
 skip= y_train.shape[0] // samples
