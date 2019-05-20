@@ -1,9 +1,0 @@
-* !Collapse class results with mean (having 100 plots won't work for cifar100 for example)
-    * Mean over classes => stratified measure vs non stratified
-* !Collapse layer results with mean => simpler graphs
-* Try with resnet, vgg, other invariant models
-    *
-* Fully trained vs untrained network? ie, how invariance evolves, snapshots :D
-    * Retrained networks invariance before-after
-* Move to fully automated exp scripts, leave jupyter
-*
